@@ -136,7 +136,7 @@ QString Color::strip() const {
  * Red value as float between 0 and 1.
  * @return
  */
-QString Color::red() {
+QString Color::red() const {
     return QString("%1").arg(QString::number(this->walColor.red(), 'g', 3));
 }
 
@@ -144,7 +144,7 @@ QString Color::red() {
  * Green value as float between 0 and 1.
  * @return
  */
-QString Color::green() {
+QString Color::green() const {
     return QString("%1").arg(QString::number(this->walColor.green(), 'g', 3));
 }
 
@@ -152,7 +152,7 @@ QString Color::green() {
  * Blue value as float between 0 and 1.
  * @return
  */
-QString Color::blue() {
+QString Color::blue() const {
     return QString("%1").arg(QString::number(this->walColor.blue(), 'g', 3));
 }
 
@@ -160,8 +160,8 @@ QString Color::blue() {
  * Lighten color by percent.
  * @return
  */
-QString Color::lighten(int percent) {
-    double per100 = ((double)percent + 100)/ 100;
+QString Color::lighten(int percent) const {
+    int per100 = percent + 100;
     QColor lighterColor = this->walColor.lighter(per100);
 
     return lighterColor.name(QColor::HexRgb);
@@ -171,8 +171,8 @@ QString Color::lighten(int percent) {
  * Darken color by percent.
  * @return
  */
-QString Color::darken(int percent) {
-    double per100 = ((double)percent + 100)/ 100;
+QString Color::darken(int percent) const {
+    int per100 = (percent * 10) + 100;
     QColor darkerColor = this->walColor.darker(per100);
 
     return darkerColor.name(QColor::HexRgb);
@@ -193,10 +193,10 @@ QString Color::saturate(int percent) {
  * @param color
  * @return
  */
-QString Color::hexToXRgba(const std::string &color) {
+QString Color::hexToXRgba(const std::string &color) const {
     QString qStr = this->walColor.name(QColor::HexRgb);
     // TODO: Split string into pairs, seperated by a '/' & append '/ff'
-    if (qStr.size() != 6) {
+    if (qStr.size() != 7) {
         std::string message = "Invalid HEX color string provided! Length mismatch.";
         throw AppException(message);
     }
@@ -225,8 +225,8 @@ QString Color::blendColor(QString &color, QString &otherColor) {
         throw AppException(message);
     }
 
-    QColor c_color = QColor(color);
-    QColor o_color = QColor(otherColor);
+    auto c_color = QColor(color);
+    auto o_color = QColor(otherColor);
 
     rgb_t newColor{};
     newColor.red_t = c_color.redF() * 0.5 + o_color.redF() * 0.5;
@@ -244,29 +244,15 @@ QString Color::blendColor(QString &color, QString &otherColor) {
  * @param amount
  * @return
  */
-QString Color::saturateColor(double amount) {
-    rgb_t tempColors{};
-    tempColors.red_t = this->walColor.redF() / 255.0;
-    tempColors.green_t = this->walColor.greenF() / 255.0;
-    tempColors.blue_t = this->walColor.blueF() / 255.0;
+QString Color::saturateColor(double amount) const {
+    hls_t hls{};
+    hls.hue_t = this->walColor.hslHueF();
+    hls.luminance_t = this->walColor.lightnessF();
+    hls.saturation_t = (float)amount;
 
-    QColor hlsColors = QColor::fromRgbF(tempColors.red_t, tempColors.green_t, tempColors.green_t).toHsl();
+    QColor newRgbColors = QColor::fromHslF(hls.hue_t, hls.saturation_t, hls.luminance_t);
 
-    hls_t hls;
-    hls.hue_t = hlsColors.hslHueF();
-    hls.luminance_t = hlsColors.lightnessF();
-    hls.saturation_t = amount;
-
-    QColor newRgbColors = QColor::fromHsl(hls.hue_t, hls.saturation_t, hls.luminance_t);
-    rgb_t rColor{};
-
-    rColor.red_t = newRgbColors.red() * 255.0;
-    rColor.green_t = newRgbColors.green() * 255.0;
-    rColor.blue_t = newRgbColors.blue() * 255.0;
-
-    QColor clr = QColor::fromRgb(rColor.red_t, rColor.green_t, rColor.blue_t );
-
-    return clr.name(QColor::HexRgb);
+    return newRgbColors.name(QColor::HexRgb);
 }
 
 /**

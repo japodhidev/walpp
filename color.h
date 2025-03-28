@@ -13,9 +13,9 @@ struct rgb_t {
 };
 
 struct hls_t {
-    double hue_t;
-    double luminance_t;
-    double saturation_t;
+    float hue_t;
+    float luminance_t;
+    float saturation_t;
 };
 
 struct yiq_t {
@@ -40,16 +40,16 @@ public:
     QString octal() const;
     QString octalStrip() const;
     QString strip() const;
-    QString red();
-    QString green();
-    QString blue();
-    QString lighten(int percent);
-    QString darken(int percent);
+    QString red() const;
+    QString green() const;
+    QString blue() const;
+    QString lighten(int percent) const;
+    QString darken(int percent) const;
     QString saturate(int percent);
 private:
-    QString hexToXRgba(const std::string &color);
+    QString hexToXRgba(const std::string &color) const;
     QString blendColor(QString &color, QString &otherColor);
-    QString saturateColor(double amount);
+    QString saturateColor(double amount) const;
     yiq_t rgbToYiq(rgb_t &color);
 };
 

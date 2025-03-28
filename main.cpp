@@ -10,7 +10,7 @@ int main(int argc, char *argv[]) {
     QCoreApplication::setApplicationVersion("0.1");
     QString sampleColor = "#FBAF28";
     Color color(sampleColor);
-    qDebug() << "color -> " << color.walColor;
+    qDebug() << "color -> " << color.walColor.name(QColor::HexRgb);
     qDebug() << "rgb -> " << color.rgb();
     qDebug() << "rgba -> " << color.rgba();
     qDebug() << "decimal -> " << color.decimal();
@@ -24,9 +24,9 @@ int main(int argc, char *argv[]) {
     qDebug() << "red -> " << color.red();
     qDebug() << "green -> " << color.green();
     qDebug() << "blue -> " << color.blue();
-    qDebug() << "lighten -> " << color.lighten(50);
+    qDebug() << "lighten -> " << color.lighten(20);
     qDebug() << "darken -> " << color.darken(50);
-    qDebug() << "saturate -> " << color.saturate(50);
+    qDebug() << "saturate -> " << color.saturate(48);
 
     // Process args
     QCommandLineParser commandLineParser;
