@@ -2,8 +2,6 @@
 #include "appexception.h"
 #include <QDebug>
 #include <string>
-#include <cmath>
-#include <QFile>
 #include <QIODevice>
 #include <QtGui/QColor>
 
@@ -21,7 +19,7 @@ Color::Color(QString &color) {
  * Convert a hex color to rgb
  * @return
  */
-QString Color::rgb() {
+QString Color::rgb() const {
     return QString("rgb(%1,%2,%3)")
         .arg(this->walColor.red())
         .arg(this->walColor.green())
@@ -35,8 +33,7 @@ QString Color::rgb() {
  */
 QString Color::xrgba() {
     try {
-        QString color = this->walColor.name(QColor::HexArgb);
-        QString xrgbaColor = hexToXRgba(color.toStdString());
+        QString xrgbaColor = hexToXRgba();
 
         return xrgbaColor;
     } catch (AppException &exception) {
@@ -50,7 +47,7 @@ QString Color::xrgba() {
  * Convert a hex color to rgba.
  * @return
  */
-QString Color::rgba() {
+QString Color::rgba() const {
     return QString("rgba(%1,%2,%3,%4)")
         .arg(this->walColor.red())
         .arg(this->walColor.green())
@@ -193,9 +190,8 @@ QString Color::saturate(int percent) {
  * @param color
  * @return
  */
-QString Color::hexToXRgba(const std::string &color) const {
+QString Color::hexToXRgba() const {
     QString qStr = this->walColor.name(QColor::HexRgb);
-    // TODO: Split string into pairs, seperated by a '/' & append '/ff'
     if (qStr.size() != 7) {
         std::string message = "Invalid HEX color string provided! Length mismatch.";
         throw AppException(message);
@@ -204,7 +200,7 @@ QString Color::hexToXRgba(const std::string &color) const {
     if (qStr.startsWith("#")) {
         qStr.removeFirst();
     }
-
+    // Split string into pairs, seperated by a '/' & append '/ff'
     QString first = qStr.sliced(0, 2);
     QString second = qStr.sliced(2, 2);
     QString third = qStr.sliced(4, 2);

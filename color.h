@@ -30,9 +30,9 @@ public:
     QColor walColor;
     double alphaValue = 100;
 
-    QString rgb();
+    QString rgb() const;
     QString xrgba();
-    QString rgba();
+    QString rgba() const;
     QString alpha() const;
     int alphaDecimal() const;
     QString decimal() const;
@@ -47,7 +47,7 @@ public:
     QString darken(int percent) const;
     QString saturate(int percent);
 private:
-    QString hexToXRgba(const std::string &color) const;
+    QString hexToXRgba() const;
     QString blendColor(QString &color, QString &otherColor);
     QString saturateColor(double amount) const;
     yiq_t rgbToYiq(rgb_t &color);
