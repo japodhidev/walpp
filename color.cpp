@@ -1,0 +1,284 @@
+#include "color.h"
+#include "appexception.h"
+#include <QDebug>
+#include <string>
+#include <cmath>
+#include <QFile>
+#include <QIODevice>
+#include <QtGui/QColor>
+
+Color::Color(QString &color) {    
+    bool isValid = QColor::isValidColorName(color);
+
+    if (!isValid) {
+        std::string message = "Invalid HEX color string provided!";
+        throw AppException(message);
+    }
+    this->walColor = QColor(color);
+}
+
+/**
+ * Convert a hex color to rgb
+ * @return
+ */
+QString Color::rgb() {
+    return QString("rgb(%1,%2,%3)")
+        .arg(this->walColor.red())
+        .arg(this->walColor.green())
+        .arg(this->walColor.blue())
+        ;
+}
+
+/**
+ * Convert a hex color to xrdb rgba.
+ * @return
+ */
+QString Color::xrgba() {
+    try {
+        QString color = this->walColor.name(QColor::HexArgb);
+        QString xrgbaColor = hexToXRgba(color.toStdString());
+
+        return xrgbaColor;
+    } catch (AppException &exception) {
+        qDebug() << exception.errorMessage;
+    }
+
+    return {};
+}
+
+/**
+ * Convert a hex color to rgba.
+ * @return
+ */
+QString Color::rgba() {
+    return QString("rgba(%1,%2,%3,%4)")
+        .arg(this->walColor.red())
+        .arg(this->walColor.green())
+        .arg(this->walColor.blue())
+        .arg(this->walColor.alpha())
+        ;
+}
+
+/**
+ * Add URxvt alpha value to color.
+ * @return
+ */
+QString Color::alpha() const {
+    return QString("[%1]%2")
+        .arg(alphaValue)
+        .arg(this->walColor.name(QColor::HexRgb));
+}
+
+/**
+ * Export the alpha value as a decimal number in [0, 1].
+ * @return
+ */
+int Color::alphaDecimal() const {
+    return (int) alphaValue / 100;
+}
+
+/**
+ * Export color in decimal.
+ * @return
+ */
+QString Color::decimal() const {
+    bool ok = true;
+    QString color = this->walColor.name(QColor::HexRgb);
+    return QString("#%1").arg(color.removeFirst().toInt(&ok, 16));
+}
+
+/**
+ * Strip '#' from decimal color.
+ * @return
+ */
+int Color::decimalStrip() const {
+    bool ok = true;
+    QString color = this->walColor.name(QColor::HexRgb);
+    return color.removeFirst().toInt(&ok, 16);
+}
+
+/**
+ * Export color in octal.
+ * @return
+ */
+QString Color::octal() const {
+    bool ok;
+    QString color = this->walColor.name(QColor::HexRgb);
+    // Convert to hex first then to octal
+    auto octalStr = QString::number(color.removeFirst().toInt(&ok, 16), 8);
+
+    return QString("%1").arg(octalStr).prepend("#");
+}
+
+/**
+ * Strip '#' from octal color.
+ * @return
+ */
+QString Color::octalStrip() const {
+    bool ok = true;
+    QString color = this->walColor.name(QColor::HexRgb);
+    // Convert to hex first then to octal
+    auto octalStr = QString::number(color.removeFirst().toInt(&ok, 16), 8);
+
+    return QString("%1").arg(octalStr);
+}
+
+/**
+ * Strip '#' from color.
+ * @return
+ */
+QString Color::strip() const {
+    QString color = this->walColor.name(QColor::HexRgb);
+    return color.removeFirst();
+}
+
+/**
+ * Red value as float between 0 and 1.
+ * @return
+ */
+QString Color::red() {
+    return QString("%1").arg(QString::number(this->walColor.red(), 'g', 3));
+}
+
+/**
+ * Green value as float between 0 and 1.
+ * @return
+ */
+QString Color::green() {
+    return QString("%1").arg(QString::number(this->walColor.green(), 'g', 3));
+}
+
+/**
+ * Blue value as float between 0 and 1.
+ * @return
+ */
+QString Color::blue() {
+    return QString("%1").arg(QString::number(this->walColor.blue(), 'g', 3));
+}
+
+/**
+ * Lighten color by percent.
+ * @return
+ */
+QString Color::lighten(int percent) {
+    double per100 = ((double)percent + 100)/ 100;
+    QColor lighterColor = this->walColor.lighter(per100);
+
+    return lighterColor.name(QColor::HexRgb);
+}
+
+/**
+ * Darken color by percent.
+ * @return
+ */
+QString Color::darken(int percent) {
+    double per100 = ((double)percent + 100)/ 100;
+    QColor darkerColor = this->walColor.darker(per100);
+
+    return darkerColor.name(QColor::HexRgb);
+}
+
+/**
+ * Saturate a color.
+ * @return
+ */
+QString Color::saturate(int percent) {
+    double per100 = (double) percent / 100;
+
+    return saturateColor(per100);
+}
+
+/**
+ * Convert a hex color to xrdb rgba
+ * @param color
+ * @return
+ */
+QString Color::hexToXRgba(const std::string &color) {
+    QString qStr = this->walColor.name(QColor::HexRgb);
+    // TODO: Split string into pairs, seperated by a '/' & append '/ff'
+    if (qStr.size() != 6) {
+        std::string message = "Invalid HEX color string provided! Length mismatch.";
+        throw AppException(message);
+    }
+
+    if (qStr.startsWith("#")) {
+        qStr.removeFirst();
+    }
+
+    QString first = qStr.sliced(0, 2);
+    QString second = qStr.sliced(2, 2);
+    QString third = qStr.sliced(4, 2);
+
+    return QString("%1/%2/%3/ff").arg(first).arg(second).arg(third);
+}
+
+/**
+ * Blend two colors together.
+ * @param color
+ * @param otherColor
+ * @return
+ */
+QString Color::blendColor(QString &color, QString &otherColor) {
+    // Validation
+    if (!QColor::isValidColorName(color) | QColor::isValidColorName(otherColor)){
+        std::string message = "Invalid HEX color string provided!";
+        throw AppException(message);
+    }
+
+    QColor c_color = QColor(color);
+    QColor o_color = QColor(otherColor);
+
+    rgb_t newColor{};
+    newColor.red_t = c_color.redF() * 0.5 + o_color.redF() * 0.5;
+    newColor.green_t = c_color.greenF() * 0.5 + o_color.greenF() * 0.5;
+    newColor.red_t = c_color.blueF() * 0.5 + o_color.blueF() * 0.5;
+
+    QColor rColor = QColor::fromRgbF(newColor.red_t, newColor.green_t, newColor.blue_t);
+
+    return rColor.name(QColor::HexRgb);
+}
+
+/**
+ * Saturate a hex color
+ * @param color
+ * @param amount
+ * @return
+ */
+QString Color::saturateColor(double amount) {
+    rgb_t tempColors{};
+    tempColors.red_t = this->walColor.redF() / 255.0;
+    tempColors.green_t = this->walColor.greenF() / 255.0;
+    tempColors.blue_t = this->walColor.blueF() / 255.0;
+
+    QColor hlsColors = QColor::fromRgbF(tempColors.red_t, tempColors.green_t, tempColors.green_t).toHsl();
+
+    hls_t hls;
+    hls.hue_t = hlsColors.hslHueF();
+    hls.luminance_t = hlsColors.lightnessF();
+    hls.saturation_t = amount;
+
+    QColor newRgbColors = QColor::fromHsl(hls.hue_t, hls.saturation_t, hls.luminance_t);
+    rgb_t rColor{};
+
+    rColor.red_t = newRgbColors.red() * 255.0;
+    rColor.green_t = newRgbColors.green() * 255.0;
+    rColor.blue_t = newRgbColors.blue() * 255.0;
+
+    QColor clr = QColor::fromRgb(rColor.red_t, rColor.green_t, rColor.blue_t );
+
+    return clr.name(QColor::HexRgb);
+}
+
+/**
+ * Convert an RGB color value to YIQ
+ * @param color
+ * @return
+ */
+yiq_t Color::rgbToYiq(rgb_t &color) {
+    yiq_t result{};
+    result.y_t = 0.30 * color.red_t + 0.59 * color.green_t + 0.11 * color.blue_t;
+    result.i_t = 0.74 * (color.red_t - result.y_t) - 0.27 * (color.blue_t - result.y_t);
+    result.q_t = 0.48 * (color.red_t - result.y_t) - 0.41 * (color.blue_t - result.y_t);
+
+    return result;
+}
