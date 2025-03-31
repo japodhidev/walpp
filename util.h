@@ -18,6 +18,7 @@ public:
     void saveJSONFile(QJsonObject &data, QString &exportFile);
     void createDir(QString &directory);
     void setupLogging();
+    QString joinPath(QString oPath, QString addition);
 };
 
 #endif // UTIL_H

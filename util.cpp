@@ -5,6 +5,7 @@
 #include <QDir>
 #include <QJsonDocument>
 #include <QProcess>
+#include <filesystem>
 
 Util::Util() {}
 
@@ -157,4 +158,18 @@ void Util::saveFile(QString &data, QString &exportFile) {
         std::string message = "Couldn't open the file for writing!";
         throw AppException(message);
     }
+}
+
+/**
+ * Append a file/directory to a path & return the new path
+ * @brief Util::joinPath
+ * @param oPath
+ * @param addition
+ * @return
+ */
+QString Util::joinPath(QString oPath, QString addition) {
+    std::filesystem::path o_p = oPath.toStdString();
+    o_p /= addition.toStdString();
+
+    return QString::fromStdString(o_p.string());
 }

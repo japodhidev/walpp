@@ -177,16 +177,16 @@ void Wallpaper::change(QString &img) {
  * Get the current wallpaper
  * @brief Wallpaper::get
  */
-QString Wallpaper::get(std::string cacheDir = CACHE_DIR) {
+QString Wallpaper::get(std::string cacheDir = CACHE_DIR.toStdString()) {
     QString cDir = QString::fromStdString(cacheDir);
-    // TODO: Find a suitable replacement for os.path.join()
-    QFileInfo currentWall = QFileInfo(cDir.append("wal"));
+    Util util;
+    QString newPath = util.joinPath(cDir, QString("wal"));
+    QFileInfo currentWall = QFileInfo(newPath);
 
     if (!currentWall.isFile()) {
         std::string message = "Unexpected argument specified. Expected a file.";
         throw AppException(message);
     }
-    Util util;
     QString absPath = currentWall.absoluteFilePath();
     QByteArray wall = util.readFile(absPath);
 
