@@ -177,7 +177,7 @@ void Wallpaper::change(QString &img) {
  * Get the current wallpaper
  * @brief Wallpaper::get
  */
-QString Wallpaper::get(std::string cacheDir = CACHE_DIR.toStdString()) {
+QString Wallpaper::get(std::string cacheDir) {
     QString cDir = QString::fromStdString(cacheDir);
     Util util;
     QString newPath = util.joinPath(cDir, QString("wal"));

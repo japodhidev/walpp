@@ -3,6 +3,7 @@
 
 #include <QProcessEnvironment>
 #include <QString>
+#include "settings.h"
 
 class Wallpaper
 {
@@ -17,7 +18,7 @@ public:
     void setMacWallpaper(QString &img);
     void setWinWallpaper(QString &img);
     void change(QString &img);
-    QString get(std::string cacheDir);
+    QString get(std::string cacheDir = CACHE_DIR.toStdString());
 };
 
 #endif // WALLPAPER_H

@@ -12,6 +12,7 @@ qt_add_executable(walpp
     appexception.h appexception.cpp
     wallpaper.h wallpaper.cpp
     settings.h
+    image.h image.cpp
 )
 
 target_link_libraries(walpp
