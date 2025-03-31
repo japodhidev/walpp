@@ -4,6 +4,7 @@
 #include <QIODevice>
 #include <QDir>
 #include <QJsonDocument>
+#include <QProcess>
 
 Util::Util() {}
 
@@ -12,7 +13,14 @@ Util::Util() {}
  * @brief Util::disown
  * @param cmd
  */
-void Util::disown(QString &cmd) {}
+void Util::disown(QString &cmd, QStringList &arguments) {
+    QProcess qProcess;
+    // Set output & error device to /dev/null
+    qProcess.setStandardOutputFile(QProcess::nullDevice());
+    qProcess.setStandardErrorFile(QProcess::nullDevice());
+    qProcess.setArguments(arguments);
+    qProcess.startDetached(cmd);
+}
 
 /**
  * Check if process is running by name.
@@ -93,7 +101,7 @@ QJsonObject Util::readJSONFile(QString &inputFile) {
         std::string message = "Couldn't open the JSON file for reading!";
         throw AppException(message);
     }
-    // TODO: Read JSON data from file
+    // Read JSON data from file
     QJsonParseError jsonError;
     QJsonDocument doc;
     doc.fromJson(jsonFile.readAll(), &jsonError);
@@ -145,5 +153,8 @@ void Util::saveFile(QString &data, QString &exportFile) {
         auto content = QByteArray::fromStdString(data.toStdString());
         file.write(content);
         file.close();
+    } else {
+        std::string message = "Couldn't open the file for writing!";
+        throw AppException(message);
     }
 }

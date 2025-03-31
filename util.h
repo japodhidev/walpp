@@ -9,7 +9,7 @@ class Util
 {
 public:
     Util();
-    void disown(QString &cmd);
+    void disown(QString &cmd, QStringList &arguments);
     bool getPID(QString &name);
     QByteArray readFile(QString &inputFile);
     QJsonObject readJSONFile(QString &inputFile);

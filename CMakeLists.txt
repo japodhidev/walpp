@@ -10,6 +10,8 @@ qt_add_executable(walpp
     color.h color.cpp
     util.h util.cpp
     appexception.h appexception.cpp
+    wallpaper.h wallpaper.cpp
+    settings.h
 )
 
 target_link_libraries(walpp
