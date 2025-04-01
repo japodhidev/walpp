@@ -1,5 +1,6 @@
 #include "image.h"
 #include "appexception.h"
+#include "util.h"
 #include <QDir>
 #include <QDirIterator>
 #include <QRandomGenerator>
@@ -20,7 +21,25 @@ Image::Image(QString &img_dir)
  */
 QString Image::getImage(QString &img, QString &cacheDir, bool iterative, bool recursive)
 {
-    return {};
+    QString wallpaper;
+    QFileInfo i(img);
+    if (i.isFile()) {
+        wallpaper = i.absolutePath();
+    } else if (i.isDir()) {
+        if (iterative) {
+            wallpaper = getNextImage(recursive);
+        } else {
+            wallpaper = getRandomImage(recursive);
+        }
+    } else {
+        std::string message = "No valid image file found!";
+        throw AppException(message);
+    }
+    Util util;
+    QString path = util.joinPath(cacheDir, "walpp");
+    util.saveFile(wallpaper, path);
+
+    return wallpaper;
 }
 
 /**
@@ -100,7 +119,30 @@ QString Image::getRandomImage(bool recursive)
  */
 QString Image::getNextImage(bool recursive)
 {
-    return {};
+    QString wallpaper;
+    QStringList images;
+    if (recursive) {
+        images = getImagesRecursively();
+    } else {
+        images = getAllImages();
+    }
+
+    if (!images.empty()) {
+        if (images.size() > 0) {
+            wallpaper = images.takeAt(1);
+        } else {
+            wallpaper = images.takeAt(0);
+        }
+        images.pop_front();
+    } else {
+        std::string message = "No images found in directory!";
+        throw AppException(message);
+    }
+    Util util;
+
+    return recursive ?
+               util.joinPath(imgDir.absolutePath(), wallpaper) :
+               util.joinPath(imgDir.absolutePath(), "");
 }
 
 bool Image::endsWithOneOf(QString str, QStringList &items)

@@ -141,9 +141,15 @@ void Wallpaper::setDesktopWallpaper(QString &desktop, QString &img) {
     }
 }
 
+/**
+ * FIXME: Implement setting wallpaper in Windows
+ * @brief Wallpaper::setWinWallpaper
+ * @param img
+ */
 void Wallpaper::setWinWallpaper(QString &img) {}
 
 /**
+ * FIXME: FIXME: Implement setting wallpaper in MacOS
  * Set the wallpaper on Windows
  * @brief Wallpaper::setMacWallpaper
  * @param img
