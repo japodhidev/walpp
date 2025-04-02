@@ -1,5 +1,5 @@
-#include "color.h"
-#include "appexception.h"
+#include "../include/color.h"
+#include "../include/appexception.h"
 #include <QDebug>
 #include <string>
 #include <QIODevice>
@@ -205,7 +205,7 @@ QString Color::hexToXRgba() const {
     QString second = qStr.sliced(2, 2);
     QString third = qStr.sliced(4, 2);
 
-    return QString("%1/%2/%3/ff").arg(first).arg(second).arg(third);
+    return QString("%1/%2/%3/ff").arg(first, second, third);
 }
 
 /**

@@ -9,8 +9,8 @@ class Util
 {
 public:
     Util();
-    void disown(QString &cmd, QStringList &arguments);
-    bool getPID(QString &name);
+    static void disown(QString &cmd, QStringList &arguments);
+    static bool getPID(QString &name);
     QByteArray readFile(QString &inputFile);
     QJsonObject readJSONFile(QString &inputFile);
     QString readRawFile(QString &inputFile);
@@ -18,7 +18,11 @@ public:
     void saveJSONFile(QJsonObject &data, QString &exportFile);
     void createDir(QString &directory);
     void setupLogging();
-    QString joinPath(QString oPath, QString addition);
+    static QString joinPath(QString oPath, QStringList addition);
+    static QString which(QString &program);
+    static void run(QString command, QStringList args);
+    static void pOpen(QString command, QStringList args);
+    static QByteArray checkOutput(QString command, QStringList arguments);
 };
 
 #endif // UTIL_H

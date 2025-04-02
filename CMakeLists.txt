@@ -6,14 +6,17 @@ find_package(Qt6 6.5 REQUIRED COMPONENTS Core Gui)
 qt_standard_project_setup()
 
 qt_add_executable(walpp
-    main.cpp
-    color.h color.cpp
-    util.h util.cpp
-    appexception.h appexception.cpp
-    wallpaper.h wallpaper.cpp
-    settings.h
-    image.h image.cpp
-)
+        src/main.cpp
+        include/color.h src/color.cpp
+        include/util.h src/util.cpp
+        include/appexception.h src/appexception.cpp
+        include/wallpaper.h src/wallpaper.cpp
+        include/settings.h
+        include/image.h src/image.cpp
+        include/sequences.h src/sequences.cpp
+        include/types.h
+        src/settings.cpp
+        include/reload.h src/reload.cpp)
 
 target_link_libraries(walpp
     PRIVATE

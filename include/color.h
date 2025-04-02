@@ -4,25 +4,7 @@
 #include <QString>
 #include <QByteArray>
 #include <QtGui/QColor>
-
-
-struct rgb_t {
-    double red_t;
-    double green_t;
-    double blue_t;
-};
-
-struct hls_t {
-    float hue_t;
-    float luminance_t;
-    float saturation_t;
-};
-
-struct yiq_t {
-    float y_t;
-    float i_t;
-    float q_t;
-};
+#include "types.h"
 
 class Color {
 public:

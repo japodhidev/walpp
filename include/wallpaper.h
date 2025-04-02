@@ -18,7 +18,7 @@ public:
     void setMacWallpaper(QString &img);
     void setWinWallpaper(QString &img);
     void change(QString &img);
-    QString get(std::string cacheDir = CACHE_DIR.toStdString());
+    QString get(const std::string& cacheDir = Setting::CACHE_DIR.toStdString());
 };
 
 #endif // WALLPAPER_H

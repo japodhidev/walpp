@@ -1,10 +1,13 @@
-#include "util.h"
-#include "appexception.h"
+#include "../include/util.h"
+#include "../include/settings.h"
+#include "../include/appexception.h"
 #include <QFile>
 #include <QIODevice>
 #include <QDir>
 #include <QJsonDocument>
 #include <QProcess>
+#include <QStandardPaths>
+#include <QFileInfo>
 #include <filesystem>
 
 Util::Util() {}
@@ -29,7 +32,19 @@ void Util::disown(QString &cmd, QStringList &arguments) {
  * @param name
  */
 bool Util::getPID(QString &name) {
-    return false;
+    QString prog = "pidof";
+
+    if(!Util::which(prog).isEmpty()) {
+        return false;
+    }
+    QByteArray output;
+    if (Setting::OS.toLower() == "darwin") {
+        output = checkOutput("pidof", QStringList() << "-s");
+    } else {
+        output = checkOutput("pidof", QStringList());
+    }
+
+    return output.contains(name.toStdString());
 }
 
 
@@ -167,9 +182,62 @@ void Util::saveFile(QString &data, QString &exportFile) {
  * @param addition
  * @return
  */
-QString Util::joinPath(QString oPath, QString addition) {
+ QString Util::joinPath(QString oPath, QStringList addition) {
     std::filesystem::path o_p = oPath.toStdString();
-    o_p /= addition.toStdString();
+    // o_p /= addition.toStdString();
+    foreach (const QString entry, addition) {
+        o_p /= entry.toStdString();
+    }
 
     return QString::fromStdString(o_p.string());
+}
+
+/**
+ * An implementantion mimicking Python's shutil.which(). Returns the absolute path of the executable or en empty string.
+ * @brief Util::which
+ * @param program
+ * @return
+ */
+QString Util::which(QString &program) {
+    return QStandardPaths::findExecutable(program);
+}
+
+/**
+ * Execute a command/run a program
+ * @brief Util::pOpen
+ * @param command
+ * @param args
+ */
+void Util::pOpen(QString command, QStringList args) {
+    QProcess process;
+    process.setStandardOutputFile(QProcess::nullDevice());
+    process.setStandardErrorFile(QProcess::nullDevice());
+    process.setStandardInputFile(QProcess::nullDevice());
+    process.setArguments(args);
+    process.start();
+}
+
+/**
+ * Run a command and wait for it to complete.
+ * @brief Util::run
+ * @param command
+ * @param args
+ */
+void Util::run(QString command, QStringList args) {
+    QProcess process;
+    process.setStandardOutputFile(QProcess::nullDevice());
+    process.setStandardErrorFile(QProcess::nullDevice());
+    process.setStandardInputFile(QProcess::nullDevice());
+    process.setArguments(args);
+    process.waitForFinished();
+}
+
+QByteArray Util::checkOutput(QString command, QStringList arguments) {
+    QProcess process;
+    process.setStandardErrorFile(QProcess::nullDevice());
+    process.setStandardInputFile(QProcess::nullDevice());
+    process.setArguments(arguments);
+    process.waitForFinished();
+
+    return process.readAllStandardOutput();
 }

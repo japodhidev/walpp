@@ -1,4 +1,4 @@
-#include "appexception.h"
+#include "../include/appexception.h"
 #include <cstdlib>
 
 AppException::AppException(std::string &message) {

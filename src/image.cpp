@@ -1,6 +1,6 @@
-#include "image.h"
-#include "appexception.h"
-#include "util.h"
+#include "../include/image.h"
+#include "../include/appexception.h"
+#include "../include/util.h"
 #include <QDir>
 #include <QDirIterator>
 #include <QRandomGenerator>

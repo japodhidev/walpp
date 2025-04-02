@@ -1,7 +1,7 @@
-#include "wallpaper.h"
-#include "util.h"
-#include "appexception.h"
-#include "settings.h"
+#include "../include/wallpaper.h"
+#include "../include/util.h"
+#include "../include/appexception.h"
+#include "../include/settings.h"
 #include <QUrl>
 #include <QFile>
 #include <QFileInfo>
@@ -58,36 +58,36 @@ void Wallpaper::setWMWallpaper(QString &img) {
     // TODO: Find/develop a suitable replacement for shutil.which()
     bool shutil = false;
     QString command = "";
-    Util util;
+    Util util_o;
 
     if (shutil) {
         // feh
         command = "feh";
-        util.disown(command, QStringList() << "--bg-fill" << img);
+        util_o.disown(command, QStringList() << "--bg-fill" << img);
     } else if (shutil) {
         // xwallpaper
         command = "xwallpaper";
-        util.disown(command, QStringList() << "--zoom" << img);
+        util_o.disown(command, QStringList() << "--zoom" << img);
     } else if (shutil) {
         // hsetroot
         command = "hsetroot";
-        util.disown(command, QStringList() << "-fill" << img);
+        util_o.disown(command, QStringList() << "-fill" << img);
     } else if (shutil) {
         // nitrogen
         command = "nitrogen";
-        util.disown(command, QStringList() << "--set-zoom-fill" << img);
+        util_o.disown(command, QStringList() << "--set-zoom-fill" << img);
     } else if (shutil) {
         // bgs
         command = "bgs";
-        util.disown(command, QStringList() << "-z" << img);
+        util_o.disown(command, QStringList() << "-z" << img);
     } else if (shutil) {
         // habak
         command = "habak";
-        util.disown(command, QStringList() << "-mS" << img);
+        util_o.disown(command, QStringList() << "-mS" << img);
     } else if (shutil) {
         // display
         command = "display";
-        util.disown(command, QStringList() << "-backdrop" << "-window" << "root" << img);
+        util_o.disown(command, QStringList() << "-backdrop" << "-window" << "root" << img);
     } else {
         std::string message = "No wallpaper setter found.";
         throw AppException(message);
@@ -129,12 +129,16 @@ void Wallpaper::setDesktopWallpaper(QString &desktop, QString &img) {
         util.disown(command, QStringList() << cmd);
     } else if (desktop.contains("kde")) {
         command = "qdbus";
-        QString str0 = QString("\"General\");d.writeConfig(\"Image\", \"%1\")};").arg(img);
+        QString str0 = QString(R"("General");d.writeConfig("Image", "%1")};)").arg(img);
         QString str = QString("%1%2%3%4")
-            .arg("var allDesktops = desktops();for (i=0;i<allDesktops.length;i++){")
-            .arg("d = allDesktops[i];d.wallpaperPlugin = \"org.kde.image\";")
-            .arg("d.currentConfigGroup = Array(\"Wallpaper\", \"org.kde.image\"")
-            .arg(str0);
+            .arg(
+                "var allDesktops = desktops();for (i=0;i<allDesktops.length;i++){",
+                "d = allDesktops[i];d.wallpaperPlugin = \"org.kde.image\";",
+                R"(d.currentConfigGroup = Array("Wallpaper", "org.kde.image")",
+                str0);
+            // .arg("d = allDesktops[i];d.wallpaperPlugin = \"org.kde.image\";")
+            // .arg("d.currentConfigGroup = Array(\"Wallpaper\", \"org.kde.image\"")
+            // .arg(str0);
         util.disown(command, QStringList() << "org.kde.plasmashell" << "/PlasmaShell" << "org.kde.PlasmaShell.evaluateScript" << str);
     } else {
         this->setWMWallpaper(img);
@@ -170,9 +174,9 @@ void Wallpaper::change(QString &img) {
 
     QString desktop = this->getDesktopEnv();
 
-    if (OS == "Darwin") {
+    if (Setting::OS.toLower() == "darwin") {
         setMacWallpaper(img);
-    } else if (OS == "Windows") {
+    } else if (Setting::OS.toLower() == "windows") {
         setWinWallpaper(img);
     } else {
         setDesktopWallpaper(desktop, img);
@@ -183,7 +187,7 @@ void Wallpaper::change(QString &img) {
  * Get the current wallpaper
  * @brief Wallpaper::get
  */
-QString Wallpaper::get(std::string cacheDir) {
+QString Wallpaper::get(const std::string& cacheDir) {
     QString cDir = QString::fromStdString(cacheDir);
     Util util;
     QString newPath = util.joinPath(cDir, QString("wal"));

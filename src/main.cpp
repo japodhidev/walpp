@@ -1,8 +1,7 @@
 #include <QCoreApplication>
-#include <QDebug>
 #include <QCommandLineParser>
 #include <QCommandLineOption>
-#include "color.h"
+#include "../include/color.h"
 
 int main(int argc, char *argv[]) {
     QCoreApplication coreApplication(argc, argv);
