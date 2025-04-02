@@ -16,5 +16,6 @@ const QString Setting::CACHE_DIR =  env.contains("WALPP_CACHE_DIR")
 const QString Setting::CONF_DIR = util_o.joinPath(XDG_CONFIG_DIR, QStringList() << "walpp");
 const QString Setting::TERM = env.value("TERM");
 const std::filesystem::path Setting::cPath = std::filesystem::current_path();
-const QString Setting::MODULE_DIR = QString::fromStdString(cPath.string());
+// const QString Setting::MODULE_DIR = QString::fromStdString(cPath.string());
+const QString Setting::MODULE_DIR = util_o.joinPath(XDG_CONFIG_DIR, QStringList() << "walpp" << "modules");
 const QString Setting::OS = QSysInfo::productType();

@@ -28,6 +28,7 @@ public:
     QString lighten(int percent) const;
     QString darken(int percent) const;
     QString saturate(int percent);
+    static QList<QString> saturateMultiple(QList<QString> colors, float amount);
 private:
     QString hexToXRgba() const;
     QString blendColor(QString &color, QString &otherColor);

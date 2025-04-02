@@ -16,7 +16,9 @@ qt_add_executable(walpp
         include/sequences.h src/sequences.cpp
         include/types.h
         src/settings.cpp
-        include/reload.h src/reload.cpp)
+        include/reload.h src/reload.cpp
+        include/backend.h
+        src/backend.cpp)
 
 target_link_libraries(walpp
     PRIVATE

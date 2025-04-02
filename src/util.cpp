@@ -1,6 +1,7 @@
 #include "../include/util.h"
 #include "../include/settings.h"
 #include "../include/appexception.h"
+#include "../include/color.h"
 #include <QFile>
 #include <QIODevice>
 #include <QDir>
@@ -232,6 +233,13 @@ void Util::run(QString command, QStringList args) {
     process.waitForFinished();
 }
 
+/**
+ * Start a process and return the output
+ * @brief Util::checkOutput
+ * @param command
+ * @param arguments
+ * @return
+ */
 QByteArray Util::checkOutput(QString command, QStringList arguments) {
     QProcess process;
     process.setStandardErrorFile(QProcess::nullDevice());
@@ -240,4 +248,194 @@ QByteArray Util::checkOutput(QString command, QStringList arguments) {
     process.waitForFinished();
 
     return process.readAllStandardOutput();
+}
+
+QList<QString> Util::listBackends() {
+    QList<QString> backends = {"wal"};
+
+    return backends;
+}
+
+/**
+ * Normalizes the image path for output
+ * @brief Util::normalizeImgPath
+ * @param img
+ * @return
+ */
+QString Util::normalizeImgPath(QString &img) {
+    if (Setting::OS.toLower() == "windows") {
+        return img.replace("\\", "/");
+    }
+
+    return img;
+}
+
+QJsonObject Util::colorsToMap(QList<int> colors, QString &img) {
+    QString imgPath = normalizeImgPath(img);
+    QJsonObject special {
+        {"background", colors.at(0)},
+        {"foreground", colors.at(15)},
+        {"cursor", colors.at(15)}
+    };
+    QJsonObject colors {
+        {"color0", colors.at(0)},
+        {"color1", colors.at(1)},
+        {"color2", colors.at(2)},
+        {"color3", colors.at(3)},
+        {"color4", colors.at(4)},
+        {"color5", colors.at(5)},
+        {"color6", colors.at(6)},
+        {"color7", colors.at(7)},
+        {"color8", colors.at(8)},
+        {"color9", colors.at(9)},
+        {"color10", colors.at(10)},
+        {"color11", colors.at(11)},
+        {"color12", colors.at(12)},
+        {"color13", colors.at(13)},
+        {"color14", colors.at(14)},
+        {"color15", colors.at(15)},
+    };
+    QJsonObject result {
+        {"wallpaper", QJsonValue(imgPath)},
+        {"alpha", Color::alphaValue},
+        {"special", special},
+        {"colors", colors}
+    };
+
+    return result;
+}
+
+QList<int> Util::genericAdjust(QList<int> colors, bool light) {
+    Color c0(colors.at(0));
+    if (light) {
+        foreach (const auto &color, colors) {
+            Color c(color);
+            color = c.saturate(60);
+            color = c.darken(50);
+        }
+
+        colors.at(0) = c0.darken(95);
+        colors.at(7) = c0.darken(75);
+        colors.at(8) = c0.darken(0.25);
+    } else {
+        colors.at(0) = c0.darken(80);
+        colors.at(7) = c0.darken(75);
+        colors.at(8) = c0.darken(25);
+    }
+    colors.at(15) = colors.at(7);
+
+    return colors;
+}
+
+/**
+ * Saturate colors
+ * @brief Util::saturateColors
+ * @param colors
+ * @param amount
+ * @return
+ */
+QList<QString> Util::saturateColors(QList<QString> colors, int amount) {
+    QList<QString> result;
+    QList<QString> newColors;
+    if (amount & (float) amount <= 1.0) {
+        newColors = Color::saturateMultiple(colors, amount);
+    }
+
+    result.append(newColors.at(1));
+    result.append(newColors.at(2);
+    result.append(newColors.at(3));
+    result.append(newColors.at(4));
+    result.append(newColors.at(5));
+    result.append(newColors.at(6));
+    result.append(newColors.at(9));
+    result.append(newColors.at(10));
+    result.append(newColors.at(11));
+    result.append(newColors.at(12));
+    result.append(newColors.at(13));
+    result.append(newColors.at(14));
+
+    return result;
+}
+
+/**
+ * Create the cache file name
+ * @brief Util::cacheFname
+ * @param img
+ * @param backend
+ * @param light
+ * @param cacheDir
+ * @param sat
+ * @return
+ */
+QList<QString> Util::cacheFname(QString &img, QString &backend, bool light, QString &cacheDir, QString sat) {
+    QString colorType = light ? "light" : "dark";
+    QFileInfo file(img);
+    QString fileName = file.fileName().replace("/", "_").replace("\\", "_").replace(".", "_");
+    auto fileSize = file.size();
+    QString cacheName = QString("%1_%2_%3_%4_%5_%6.json").arg(fileName, colorType, backend, sat, fileSize, Setting::cacheVersion);
+    QList<QString> result = {cacheDir, "schemes", cacheName};
+
+    return result;
+}
+
+/**
+ * Figure out which backend to use.
+ * @brief Util::getBackend
+ * @param backend
+ * @return
+ */
+QString Util::getBackend(QString &backend) {
+    if (backend == "random") {
+        QList<QString> backends = listBackends();
+        auto randomIndex = QRandomGenerator(0, backends.size());
+
+        return backends.at(randomIndex);
+    }
+    return backend;
+}
+
+/**
+ * Generate a palette from the colors.
+ * @brief Util::palette
+ */
+void Util::palette() {
+    for (int i = 0; i <=16; i++) {
+        QString str_i;
+        int mod_i = i % 8;
+        if (mod_i == 0) {
+            qDebug << "";
+        }
+        if (mod_i > 7) {
+            str_i = QString("8;5;%1").arg(i);
+        }
+        // TODO: print("\033[4%sm%s\033[0m" % (i, " " * (80 // 20)), end="")
+        qDebug() << QString("\033[4%1m%2\033[0m").arg(i);
+    }
+    qDebug() << "";
+}
+
+/**
+ * Generate a palette
+ * @brief Util::get
+ * @param img
+ * @param light
+ * @param backend
+ * @param cacheDir
+ */
+QJsonObject Util::get(QString img, bool light, QString backend, QString cacheDir,  QString sat) {
+    QList<QString> cacheName = cacheFname(img, backend, light, cacheDir, sat);
+    QString cacheFile = joinPath(cacheName.at(0), QStringList() << cacheName.at(1) << cacheName.at(2));
+    QFileInfo cfile(cacheFile);
+    QJsonObject cs {};
+    if (cFile.isFile()) {
+        // colors = theme.file(cfile.fileName());
+        // colors["alpha"] = util.Color.alpha_num
+        qDebug() << "Found cached colorscheme.";
+    } esle {
+        qDebug() << "Generating a  colorscheme.";
+        QString bEnd = getBackend(backend);
+        qDebug() << QString("Using %1 backend.").arg(bEnd);
+    }
+
+    return cs;
 }

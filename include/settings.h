@@ -19,6 +19,8 @@ public:
     static const QString MODULE_DIR;
     // platform.uname()[0]
     static const QString OS;
+    static const QString version = "0.1.0";
+    static const QString cacheVersion = "1.0.0";
 };
 
 #endif // SETTINGS_H

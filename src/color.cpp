@@ -264,3 +264,21 @@ yiq_t Color::rgbToYiq(rgb_t &color) {
 
     return result;
 }
+
+/**
+ * Saturate a list of colors by the provided amount
+ * @brief Color::saturateMultiple
+ * @param colors
+ * @param amount
+ * @return
+ */
+QList<QString> Color::saturateMultiple(QList<QString> colors, float amount) {
+    QList<QString> saturatedColors;
+    foreach (const QString color, container) {
+        Color c(color);
+        QString sat_c = c.saturate((int) amount);
+        saturatedColors.append(sat_c);
+    }
+
+    return saturatedColors;
+}
