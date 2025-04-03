@@ -55,31 +55,31 @@ void Wallpaper::xfconf(QString &img) {}
 void Wallpaper::setWMWallpaper(QString &img) {
     QString command = "";
 
-    if (!Util::which((QString &) "feh").isEmpty()) {
+    if (!Util::which("feh").isEmpty()) {
         // feh
         command = "feh";
         Util::disown(command, QStringList() << "--bg-fill" << img);
-    } else if (!Util::which((QString &) "xwallpaper").isEmpty()) {
+    } else if (!Util::which("xwallpaper").isEmpty()) {
         // xwallpaper
         command = "xwallpaper";
         Util::disown(command, QStringList() << "--zoom" << img);
-    } else if (!Util::which((QString &) "hsetroot").isEmpty()) {
+    } else if (!Util::which("hsetroot").isEmpty()) {
         // hsetroot
         command = "hsetroot";
         Util::disown(command, QStringList() << "-fill" << img);
-    } else if (!Util::which((QString &) "nitrogen").isEmpty()) {
+    } else if (!Util::which("nitrogen").isEmpty()) {
         // nitrogen
         command = "nitrogen";
         Util::disown(command, QStringList() << "--set-zoom-fill" << img);
-    } else if (!Util::which((QString &) "bgs").isEmpty()) {
+    } else if (!Util::which("bgs").isEmpty()) {
         // bgs
         command = "bgs";
         Util::disown(command, QStringList() << "-z" << img);
-    } else if (!Util::which((QString &) "habak").isEmpty()) {
+    } else if (!Util::which("habak").isEmpty()) {
         // habak
         command = "habak";
         Util::disown(command, QStringList() << "-mS" << img);
-    } else if (!Util::which((QString &) "display").isEmpty()) {
+    } else if (!Util::which("display").isEmpty()) {
         // display
         command = "display";
         Util::disown(command, QStringList() << "-backdrop" << "-window" << "root" << img);

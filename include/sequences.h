@@ -9,12 +9,13 @@ class Sequences
 {
 public:
     Sequences();
-    void send(QMap<QString, QString> colors, QString cacheDir = Setting::CACHE_DIR, bool toSend = true, bool vteFix = false);
+    static void send(QJsonObject colors, QString cacheDir = Setting::CACHE_DIR, bool toSend = true, bool vteFix = false);
 private:
-    QString setSpecial(int index,  QString &color, QString itermName = "h", int alpha = 100);
-    QString setColor(int index, QString &hexColor);
-    QString setItermTabColor(rgb_t color);
-    QString createSequence(QMap<QString, QString>, bool vteFix = false);
+    static QString setSpecial(int index,  QString color, QString itermName = "h", int alpha = 100);
+    static QString setColor(int index, QString hexColor);
+    static QString setItermTabColor(rgb_t color);
+    static QString createSequences(QJsonObject colors, bool vteFix = false);
+    static QList<QString> findTerminals();
 };
 
 #endif // SEQUENCES_H

@@ -74,7 +74,7 @@ void Util::saveJSONFile(QJsonObject &data, QString &exportFile) {
  * Alias to create the cache dir.
  * @param directory
  */
-void Util::createDir(QString &directory) {
+void Util::createDir(QString directory) {
     QDir dir;
     bool success = dir.mkdir(directory);
     if (!success) {
@@ -200,7 +200,7 @@ void Util::saveFile(QString &data, QString &exportFile) {
  * @param program
  * @return
  */
-QString Util::which(QString &program) {
+QString Util::which(QString program) {
     return QStandardPaths::findExecutable(program);
 }
 
@@ -402,7 +402,8 @@ QString Util::getBackend(QString &backend) {
  * @brief Util::palette
  */
 void Util::palette() {
-    for (int i = 0; i <=16; i++) {
+    QTextStream ts(stdout);
+    for (int i = 0; i <= 16; i++) {
         QString str_i;
         int mod_i = i % 8;
         if (mod_i == 0) {
@@ -412,7 +413,8 @@ void Util::palette() {
             str_i = QString("8;5;%1").arg(i);
         }
         // TODO: print("\033[4%sm%s\033[0m" % (i, " " * (80 // 20)), end="")
-        qDebug() << QString("\033[4%1m%2\033[0m").arg(i);
+        QString spaces = QString(" ").repeated(80 / 20);
+        ts << QString("\033[4%1m%2\033[0m").arg(i).arg(spaces);
     }
     qDebug() << "";
 }

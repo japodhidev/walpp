@@ -14,7 +14,7 @@
  * @return
  */
 QByteArray Wal::runImageMagick(int colorCount, QString &img, QString magickCmd) {
-    Util::checkOutput(std::move(magickCmd), QStringList() << QString("%1[0]").arg(img) << "-resize" << "25%" << "-colors" << QString("").arg(colorCount) << "-unique-colors" << "txt:-");
+    return Util::checkOutput(std::move(magickCmd), QStringList() << QString("%1[0]").arg(img) << "-resize" << "25%" << "-colors" << QString("").arg(colorCount) << "-unique-colors" << "txt:-");
 }
 
 /**
@@ -109,9 +109,12 @@ QList<QString> Wal::adjust(QList<QString> colors, bool light) {
         if (!rawColors.at(1).startsWith("0")) {
             rawColors.replace(0, color_o.darken(40, rawColors.at(0)));
         }
-        rawColors.replace(7, Color::blendColor(const_cast<QString &>(rawColors.at(7)), (QString &) "#EEEEEE"));
+        QString firstColor = rawColors.at(7);
+        QString secondColor = "#EEEEEE";
+        rawColors.replace(7, Color::blendColor(firstColor, secondColor));
         rawColors.replace(8, color_o.darken(30, rawColors.at(7)));
-        rawColors.replace(15, Color::blendColor(const_cast<QString &>(rawColors.at(15)), (QString &) "#EEEEEE"));
+        QString thirdColor = rawColors.at(15);
+        rawColors.replace(15, Color::blendColor(thirdColor, secondColor));
     }
 
     return rawColors;

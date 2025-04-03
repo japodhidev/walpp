@@ -13,10 +13,10 @@
 int main(int argc, char *argv[]) {
     QCoreApplication coreApplication(argc, argv);
     QCoreApplication::setApplicationName("walpp");
-    QCoreApplication::setApplicationVersion("0.1");
+    QCoreApplication::setApplicationVersion(Setting::version);
     QString sampleColor = "#FBAF28";
     Color color(sampleColor);
-    qDebug() << "color -> " << color.walColor.name(QColor::HexRgb);
+    /*qDebug() << "color -> " << color.walColor.name(QColor::HexRgb);
     qDebug() << "rgb -> " << color.rgb();
     qDebug() << "rgba -> " << color.rgba();
     qDebug() << "decimal -> " << color.decimal();
@@ -30,15 +30,13 @@ int main(int argc, char *argv[]) {
     qDebug() << "red -> " << color.red();
     qDebug() << "green -> " << color.green();
     qDebug() << "blue -> " << color.blue();
-    qDebug() << "lighten -> " << Color::lighten(20);
-    qDebug() << "darken -> " << Color::darken(50);
-    qDebug() << "saturate -> " << Color::saturate(48);
+    qDebug() << "lighten -> " << color.lighten(20);
+    qDebug() << "darken -> " << color.darken(50);
+    qDebug() << "saturate -> " << color.saturate(48);*/
 
     // Process args
     QCommandLineParser parser;
     parser.setApplicationDescription("wal - Generate colorschemes on the fly");
-    parser.addHelpOption();
-    // parser.addVersionOption();
 
     QCommandLineOption alpha(
         QStringList() << "a" << "alpha",
@@ -194,21 +192,17 @@ int main(int argc, char *argv[]) {
         );
     parser.addOption(skipMost);
 
-    // Main app function
-    /**
-     * util.create_dir(os.path.join(CONF_DIR, "templates"))
-     * util.create_dir(os.path.join(CONF_DIR, "colorschemes/light/"))
-     * util.create_dir(os.path.join(CONF_DIR, "colorschemes/dark/"))
-     */
-
     // Parse provided arguments
     parser.process(coreApplication);
     Util util;
 
     // Process args that exit
-    if (parser.optionNames().size() <= 1) {
+    if (parser.optionNames().size() == 0) {
         parser.showHelp();
     }
+
+    // qDebug() << "Test";
+    // std::exit(EXIT_FAILURE);
 
     if (parser.isSet("preview")) {
         qDebug() << "Current colorscheme:";
@@ -231,21 +225,26 @@ int main(int argc, char *argv[]) {
         qDebug() << QString("TODO: Remove %1 directory.").arg(schemeDir);
     }
 
-    if (!parser.isSet("directory") & !parser.isSet("theme") & !parser.isSet("restore") & !parser.isSet("lastWal") & !parser.isSet("backend")) {
-        qDebug() << "No input specified.";
+    if (!parser.isSet("directory") & !parser.isSet("theme") & !parser.isSet("lastWal") & !parser.isSet("backend")) {
+        qDebug() << "Error: No input specified.";
         qDebug() << "--backend, --theme, -i or -R are required.";
+        std::exit(EXIT_FAILURE);
     }
 
     if (parser.value("theme") == "list_themes") {
         qDebug() << "theme.list_out()";
+        std::exit(EXIT_SUCCESS);
     }
 
     if (parser.value("backend") == "list_backends") {
-        qDebug() << "List backends" ;
+        foreach (const auto &b, Util::listBackends()) {
+            qDebug() << b;
+        }
+        std::exit(EXIT_SUCCESS);
     }
 
     // Process args
-    if (parser.isSet("quiet")) {
+    if (parser.isSet("quietMode")) {
         qDebug() << "logging.getLogger().disabled = True";
         // Redirect stdout to stderr then to /dev/null
         qDebug() << "sys.stdout = sys.stderr = open(os.devnull, 'w')";
@@ -253,8 +252,8 @@ int main(int argc, char *argv[]) {
 
     if (parser.isSet("alpha")) {
         qDebug() << "util.Color.alpha_num = alpha";
-        bool *ok = reinterpret_cast<bool *>(true);
-        color.alphaValue = parser.value("alpha").toDouble(ok);
+        bool ok;
+        color.alphaValue = parser.value("alpha").toDouble(&ok);
     }
     QString imageFile;
     QJsonObject plainColors;
@@ -276,9 +275,9 @@ int main(int argc, char *argv[]) {
         qDebug() << "colorsPlain = theme.file(theme, light)";
     }
 
-    if (parser.isSet("restore")) {
+    /*if (parser.isSet("restore")) {
         qDebug() << "colorsPlain = theme.file(os.path.join(CACHE_DIR, 'colors.json'))";
-    }
+    }*/
 
     if (parser.isSet("lastWal")) {
         qDebug() << "cached_wallpaper = util.read_file(os.path.join(CACHE_DIR, 'wal'))";
@@ -326,13 +325,17 @@ int main(int argc, char *argv[]) {
         qDebug() << "for cmd in args.o:\n"
                     "            util.disown([cmd])";
         QStringList script = parser.value("externalScript").split(' ');
-        Util::disown(const_cast<QString &>(script.at(0)), QStringList() << script.sliced(1))
+        Util::disown(const_cast<QString &>(script.at(0)), QStringList() << script.sliced(1));
     }
 
     if (!parser.isSet("skipMost")) {
         qDebug() << "reload.gtk()";
         Reload::gtk();
     }
+    QString confDir = Setting::CONF_DIR;
+    Util::createDir(Util::joinPath(confDir, QStringList() << "templates"));
+    Util::createDir(Util::joinPath(confDir, QStringList() << "colorschemes" << "light"));
+    Util::createDir(Util::joinPath(confDir, QStringList() << "colorschemes" << "dark"));
 
     return QCoreApplication::exec();
 }

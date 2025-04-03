@@ -17,10 +17,10 @@ public:
     static QString readRawFile(QString &inputFile);
     static void saveFile(QString &data, QString &exportFile);
     static void saveJSONFile(QJsonObject &data, QString &exportFile);
-    static void createDir(QString &directory);
+    static void createDir(QString directory);
     void setupLogging();
     static QString joinPath(QString oPath, QStringList addition);
-    static QString which(QString &program);
+    static QString which(QString program);
     static void run(QString command, QStringList args);
     static void pOpen(QString command, QStringList args);
     static QByteArray checkOutput(QString command, QStringList arguments);
