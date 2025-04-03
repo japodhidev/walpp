@@ -8,6 +8,7 @@
 
 class Color {
 public:
+    Color();
     explicit Color(QString &hexColor);
     QColor walColor;
     double alphaValue = 100;
@@ -25,15 +26,16 @@ public:
     QString red() const;
     QString green() const;
     QString blue() const;
-    QString lighten(int percent) const;
-    QString darken(int percent) const;
-    QString saturate(int percent);
-    static QList<QString> saturateMultiple(QList<QString> colors, float amount);
+    QString lighten(int percent, QString color = QString("")) const;
+    QString darken(int percent, QString color = QString("")) const;
+    QString saturate(int percent, QString color = QString("")) const;
+    static QList<QString> saturateMultiple(QList<QString> &colors, float amount);
+    static QString blendColor(QString &color, QString &otherColor);
 private:
     QString hexToXRgba() const;
-    QString blendColor(QString &color, QString &otherColor);
     QString saturateColor(double amount) const;
     yiq_t rgbToYiq(rgb_t &color);
+    static QColor validateColorStr(QString &color);
 };
 
 #endif // COLOR_H

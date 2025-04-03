@@ -1,13 +1,11 @@
 #include "../include/wallpaper.h"
 #include "../include/util.h"
 #include "../include/appexception.h"
-#include "../include/settings.h"
 #include <QUrl>
-#include <QFile>
 #include <QFileInfo>
 
 Wallpaper::Wallpaper() {
-    this->procesEnv = QProcessEnvironment::systemEnvironment();
+    this->processEnv = QProcessEnvironment::systemEnvironment();
 }
 
 /**
@@ -15,27 +13,27 @@ Wallpaper::Wallpaper() {
  * @brief Wallpaper::getDesktopEnv
  */
 QString Wallpaper::getDesktopEnv() {
-    if (this->procesEnv.contains("XDG_CURRENT_DESKTOP")) {
-        return this->procesEnv.value("XDG_CURRENT_DESKTOP");
+    if (this->processEnv.contains("XDG_CURRENT_DESKTOP")) {
+        return this->processEnv.value("XDG_CURRENT_DESKTOP");
     }
 
-    if (this->procesEnv.contains("DESKTOP_SESSION")) {
-        return this->procesEnv.value("DESKTOP_SESSION");
+    if (this->processEnv.contains("DESKTOP_SESSION")) {
+        return this->processEnv.value("DESKTOP_SESSION");
     }
 
-    if (this->procesEnv.contains("GNOME_DESKTOP_SESSION_ID")) {
+    if (this->processEnv.contains("GNOME_DESKTOP_SESSION_ID")) {
         return "GNOME";
     }
 
-    if (this->procesEnv.contains("MATE_DESKTOP_SESSION_ID")) {
+    if (this->processEnv.contains("MATE_DESKTOP_SESSION_ID")) {
         return "MATE";
     }
 
-    if (this->procesEnv.contains("SWAYSOCK")) {
+    if (this->processEnv.contains("SWAYSOCK")) {
         return "SWAY";
     }
 
-    if (this->procesEnv.contains("DESKTOP_STARTUP_ID") & this->procesEnv.value("DESKTOP_SESSION").contains("awesome")) {
+    if (this->processEnv.contains("DESKTOP_STARTUP_ID") & this->processEnv.value("DESKTOP_SESSION").contains("awesome")) {
         return "AWESOME";
     }
 
@@ -55,39 +53,36 @@ void Wallpaper::xfconf(QString &img) {}
  * @param img
  */
 void Wallpaper::setWMWallpaper(QString &img) {
-    // TODO: Find/develop a suitable replacement for shutil.which()
-    bool shutil = false;
     QString command = "";
-    Util util_o;
 
-    if (shutil) {
+    if (!Util::which((QString &) "feh").isEmpty()) {
         // feh
         command = "feh";
-        util_o.disown(command, QStringList() << "--bg-fill" << img);
-    } else if (shutil) {
+        Util::disown(command, QStringList() << "--bg-fill" << img);
+    } else if (!Util::which((QString &) "xwallpaper").isEmpty()) {
         // xwallpaper
         command = "xwallpaper";
-        util_o.disown(command, QStringList() << "--zoom" << img);
-    } else if (shutil) {
+        Util::disown(command, QStringList() << "--zoom" << img);
+    } else if (!Util::which((QString &) "hsetroot").isEmpty()) {
         // hsetroot
         command = "hsetroot";
-        util_o.disown(command, QStringList() << "-fill" << img);
-    } else if (shutil) {
+        Util::disown(command, QStringList() << "-fill" << img);
+    } else if (!Util::which((QString &) "nitrogen").isEmpty()) {
         // nitrogen
         command = "nitrogen";
-        util_o.disown(command, QStringList() << "--set-zoom-fill" << img);
-    } else if (shutil) {
+        Util::disown(command, QStringList() << "--set-zoom-fill" << img);
+    } else if (!Util::which((QString &) "bgs").isEmpty()) {
         // bgs
         command = "bgs";
-        util_o.disown(command, QStringList() << "-z" << img);
-    } else if (shutil) {
+        Util::disown(command, QStringList() << "-z" << img);
+    } else if (!Util::which((QString &) "habak").isEmpty()) {
         // habak
         command = "habak";
-        util_o.disown(command, QStringList() << "-mS" << img);
-    } else if (shutil) {
+        Util::disown(command, QStringList() << "-mS" << img);
+    } else if (!Util::which((QString &) "display").isEmpty()) {
         // display
         command = "display";
-        util_o.disown(command, QStringList() << "-backdrop" << "-window" << "root" << img);
+        Util::disown(command, QStringList() << "-backdrop" << "-window" << "root" << img);
     } else {
         std::string message = "No wallpaper setter found.";
         throw AppException(message);
@@ -102,7 +97,6 @@ void Wallpaper::setWMWallpaper(QString &img) {
  */
 void Wallpaper::setDesktopWallpaper(QString &desktop, QString &img) {
     desktop = desktop.toLower();
-    Util util;
     QString command;
     // urllib.parse.quote(img)
     QUrl imgUrl = QUrl(img);
@@ -112,21 +106,21 @@ void Wallpaper::setDesktopWallpaper(QString &desktop, QString &img) {
         this->xfconf(img);
     } else if(desktop.contains("muffin") | desktop.contains("cinnamon")) {
         command = "gsettings";
-        util.disown(command, QStringList() << "set" << "org.cinnamon.desktop.background" << "picture-uri" <<  file);
+        Util::disown(command, QStringList() << "set" << "org.cinnamon.desktop.background" << "picture-uri" <<  file);
     } else if(desktop.contains("gnome") | desktop.contains("unity")) {
         command = "gsettings";
-        util.disown(command, QStringList() << "set" << "org.gnome.desktop.background" << "picture-uri" <<  file);
+        Util::disown(command, QStringList() << "set" << "org.gnome.desktop.background" << "picture-uri" <<  file);
     } else if (desktop.contains("mate")) {
         command = "gsettings";
-        util.disown(command, QStringList() << "set" << "org.mate.background" << "picture-filename" << img);
+        Util::disown(command, QStringList() << "set" << "org.mate.background" << "picture-filename" << img);
     } else if (desktop.contains("sway")) {
         command = "swaymsg";
-        util.disown(command, QStringList() << "output" << "*" << "bg" << img << "fill");
+        Util::disown(command, QStringList() << "output" << "*" << "bg" << img << "fill");
     } else if(desktop.contains("awesome")) {
         command = "awesome-client";
         // TODO: "require('gears').wallpaper.maximized('{img}')".format(**locals())
         QString cmd = QString("require('gears').wallpaper.maximized('%1')").arg(img);
-        util.disown(command, QStringList() << cmd);
+        Util::disown(command, QStringList() << cmd);
     } else if (desktop.contains("kde")) {
         command = "qdbus";
         QString str0 = QString(R"("General");d.writeConfig("Image", "%1")};)").arg(img);
@@ -139,7 +133,7 @@ void Wallpaper::setDesktopWallpaper(QString &desktop, QString &img) {
             // .arg("d = allDesktops[i];d.wallpaperPlugin = \"org.kde.image\";")
             // .arg("d.currentConfigGroup = Array(\"Wallpaper\", \"org.kde.image\"")
             // .arg(str0);
-        util.disown(command, QStringList() << "org.kde.plasmashell" << "/PlasmaShell" << "org.kde.PlasmaShell.evaluateScript" << str);
+        Util::disown(command, QStringList() << "org.kde.plasmashell" << "/PlasmaShell" << "org.kde.PlasmaShell.evaluateScript" << str);
     } else {
         this->setWMWallpaper(img);
     }
@@ -189,8 +183,7 @@ void Wallpaper::change(QString &img) {
  */
 QString Wallpaper::get(const std::string& cacheDir) {
     QString cDir = QString::fromStdString(cacheDir);
-    Util util;
-    QString newPath = util.joinPath(cDir, QString("wal"));
+    QString newPath = Util::joinPath(cDir, QStringList() << "wal");
     QFileInfo currentWall = QFileInfo(newPath);
 
     if (!currentWall.isFile()) {
@@ -198,7 +191,7 @@ QString Wallpaper::get(const std::string& cacheDir) {
         throw AppException(message);
     }
     QString absPath = currentWall.absoluteFilePath();
-    QByteArray wall = util.readFile(absPath);
+    QByteArray wall = Util::readFile(absPath);
 
-    return QString(wall);
+    return QString{wall};
 }

@@ -5,6 +5,8 @@
 #include <QIODevice>
 #include <QtGui/QColor>
 
+Color::Color() = default;
+
 Color::Color(QString &color) {    
     bool isValid = QColor::isValidColorName(color);
 
@@ -157,9 +159,16 @@ QString Color::blue() const {
  * Lighten color by percent.
  * @return
  */
-QString Color::lighten(int percent) const {
+QString Color::lighten(int percent, QString color) const {
     int per100 = percent + 100;
-    QColor lighterColor = this->walColor.lighter(per100);
+    QColor lighterColor;
+
+    if (color.isEmpty()) {
+        lighterColor = this->walColor.lighter(per100);
+    } else {
+        QColor c = validateColorStr(color);
+        lighterColor = c.darker(per100);
+    }
 
     return lighterColor.name(QColor::HexRgb);
 }
@@ -168,9 +177,16 @@ QString Color::lighten(int percent) const {
  * Darken color by percent.
  * @return
  */
-QString Color::darken(int percent) const {
+QString Color::darken(int percent, QString color) const {
     int per100 = (percent * 10) + 100;
-    QColor darkerColor = this->walColor.darker(per100);
+    QColor darkerColor;
+
+    if (color.isEmpty()) {
+        darkerColor = this->walColor.darker(per100);
+    } else {
+        QColor c = validateColorStr(color);
+        darkerColor = c.darker(per100);
+    }
 
     return darkerColor.name(QColor::HexRgb);
 }
@@ -179,10 +195,22 @@ QString Color::darken(int percent) const {
  * Saturate a color.
  * @return
  */
-QString Color::saturate(int percent) {
+QString Color::saturate(int percent, QString color) const {
     double per100 = (double) percent / 100;
+    hls_t hls{};
+    if (color.isEmpty()) {
+        hls.hue_t = this->walColor.hslHueF();
+        hls.luminance_t = this->walColor.lightnessF();
+    } else {
+        QColor c = Color::validateColorStr(color);
+        hls.hue_t = c.hslHueF();
+        hls.luminance_t = c.lightnessF();
+    }
+    hls.saturation_t = (float)per100;
 
-    return saturateColor(per100);
+    QColor newRgbColors = QColor::fromHslF(hls.hue_t, hls.saturation_t, hls.luminance_t);
+
+    return newRgbColors.name(QColor::HexRgb);
 }
 
 /**
@@ -265,6 +293,17 @@ yiq_t Color::rgbToYiq(rgb_t &color) {
     return result;
 }
 
+QColor Color::validateColorStr(QString &color) {
+    bool isValid = QColor::isValidColorName(color);
+
+    if (!isValid) {
+        std::string message = "Invalid HEX color string provided!";
+        throw AppException(message);
+    }
+
+    return QColor{color};
+}
+
 /**
  * Saturate a list of colors by the provided amount
  * @brief Color::saturateMultiple
@@ -272,9 +311,9 @@ yiq_t Color::rgbToYiq(rgb_t &color) {
  * @param amount
  * @return
  */
-QList<QString> Color::saturateMultiple(QList<QString> colors, float amount) {
+QList<QString> Color::saturateMultiple(QList<QString> &colors, float amount) {
     QList<QString> saturatedColors;
-    foreach (const QString color, container) {
+    foreach (QString color, colors) {
         Color c(color);
         QString sat_c = c.saturate((int) amount);
         saturatedColors.append(sat_c);
@@ -282,3 +321,4 @@ QList<QString> Color::saturateMultiple(QList<QString> colors, float amount) {
 
     return saturatedColors;
 }
+

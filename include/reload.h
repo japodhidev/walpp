@@ -7,16 +7,16 @@ class Reload
 {
 public:
     Reload();
-    void env(QStringList xrdbFile, bool ttyReload = true);
-    void gtk();
+    static void env(QStringList xrdbFile, bool ttyReload = true);
+    static void gtk();
 private:
-    void tty(bool ttyReload);
-    void xrdb(QStringList xrdbFiles);
-    void i3();
-    void bspwm();
-    void kitty();
-    void polybar();
-    void sway();
+    static void tty(bool ttyReload);
+    static void xrdb(QStringList xrdbFiles);
+    static void i3();
+    static void bspwm();
+    static void kitty();
+    static void polybar();
+    static void sway();
 
 };
 

@@ -9,7 +9,7 @@ class Wallpaper
 {
 public:
     Wallpaper();
-    QProcessEnvironment procesEnv;
+    QProcessEnvironment processEnv;
 
     QString getDesktopEnv();
     void xfconf(QString &img);

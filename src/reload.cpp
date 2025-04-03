@@ -3,8 +3,9 @@
 #include "../include/settings.h"
 #include <QProcessEnvironment>
 #include <QProcess>
+#include <utility>
 
-Reload::Reload() {}
+Reload::Reload() = default;
 
 /**
  * Load colors in tty
@@ -12,8 +13,7 @@ Reload::Reload() {}
  * @param ttyReload
  */
 void Reload::tty(bool ttyReload) {
-    Util util;
-    QString ttyScript = util.joinPath(Setting::CACHE_DIR, QStringList() << "colors-tty.sh");
+    QString ttyScript = Util::joinPath(Setting::CACHE_DIR, QStringList() << "colors-tty.sh");
     QString term = QProcessEnvironment::systemEnvironment().value("TERM");
 
     if (ttyReload & term == "linux") {
@@ -119,7 +119,7 @@ void Reload::sway() {
  * @brief Reload::env
  */
 void Reload::env(QStringList xrdbFile, bool ttyReload) {
-    xrdb(xrdbFile);
+    xrdb(std::move(xrdbFile));
     i3();
     bspwm();
     kitty();

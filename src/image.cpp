@@ -5,8 +5,8 @@
 #include <QDirIterator>
 #include <QRandomGenerator>
 
-Image::Image(QString &img_dir)
-{
+
+Image::Image(QString &img_dir) {
     imgDir = QFileInfo(img_dir);
 }
 
@@ -24,7 +24,7 @@ QString Image::getImage(QString &img, QString &cacheDir, bool iterative, bool re
     QString wallpaper;
     QFileInfo i(img);
     if (i.isFile()) {
-        wallpaper = i.absolutePath();
+        wallpaper = i.absoluteFilePath();
     } else if (i.isDir()) {
         if (iterative) {
             wallpaper = getNextImage(recursive);
@@ -36,7 +36,7 @@ QString Image::getImage(QString &img, QString &cacheDir, bool iterative, bool re
         throw AppException(message);
     }
     Util util;
-    QString path = util.joinPath(cacheDir, "walpp");
+    QString path = Util::joinPath(cacheDir, QStringList() << "walpp");
     util.saveFile(wallpaper, path);
 
     return wallpaper;
@@ -50,11 +50,12 @@ QString Image::getImage(QString &img, QString &cacheDir, bool iterative, bool re
 QStringList Image::getImagesRecursively()
 {
     QStringList images;
-    QDirIterator dirIt(imgDir.absolutePath(), QDirIterator::Subdirectories);
+    QDirIterator dirIt(imgDir.absoluteFilePath(), QDirIterator::Subdirectories);
     while (dirIt.hasNext()) {
         QFileInfo f(dirIt.nextFileInfo());
-        if (endsWithOneOf(f.fileName(), fileTypes)) {
-            images.append(f.absolutePath());
+        QString fileName = f.fileName();
+        if (endsWithOneOf(fileName, fileTypes)) {
+            images.append(f.absoluteFilePath());
         }
     }
 
@@ -77,14 +78,13 @@ QStringList Image::getAllImages()
     }
 
     foreach (const auto &entry, wallPath.dir().entryInfoList()) {
-        if (endsWithOneOf(entry.baseName(), fileTypes)) {
+        QString baseName = entry.baseName();
+        if (endsWithOneOf(baseName, fileTypes)) {
             images.append(entry.absoluteFilePath());
         }
     }
 
     return images;
-
-    return {};
 }
 
 /**
@@ -107,7 +107,7 @@ QString Image::getRandomImage(bool recursive)
     }
 
     // Pick a random image. Maybe similar to Python's random.shuffle()
-    QRandomGenerator prng(0, images.size());
+    QRandomGenerator prng(nullptr, images.size());
     return images.at(prng.generate());
 }
 
@@ -128,7 +128,7 @@ QString Image::getNextImage(bool recursive)
     }
 
     if (!images.empty()) {
-        if (images.size() > 0) {
+        if (images.size() >= 1) {
             wallpaper = images.takeAt(1);
         } else {
             wallpaper = images.takeAt(0);
@@ -138,18 +138,17 @@ QString Image::getNextImage(bool recursive)
         std::string message = "No images found in directory!";
         throw AppException(message);
     }
-    Util util;
 
     return recursive ?
-               util.joinPath(imgDir.absolutePath(), wallpaper) :
-               util.joinPath(imgDir.absolutePath(), "");
+               Util::joinPath(imgDir.absolutePath(), QStringList() << wallpaper) :
+               Util::joinPath(imgDir.absolutePath(), QStringList() << "");
 }
 
-bool Image::endsWithOneOf(QString str, QStringList &items)
+bool Image::endsWithOneOf(QString &eStr, QStringList &items)
 {
     QString t_table;
     foreach (const auto &entry, items) {
-        bool hasValue = str.toLower().contains(entry);
+        bool hasValue = eStr.toLower().contains(entry);
         if (hasValue) {
             t_table.append("t");
         } else {
@@ -159,3 +158,5 @@ bool Image::endsWithOneOf(QString str, QStringList &items)
 
     return t_table.contains("t");
 }
+
+
