@@ -6,6 +6,8 @@
 #include "../include/image.h"
 #include "../include/settings.h"
 #include "../include/util.h"
+#include "../include/wallpaper.h"
+#include "../include/reload.h"
 
 
 int main(int argc, char *argv[]) {
@@ -267,7 +269,7 @@ int main(int argc, char *argv[]) {
         auto img = parser.value("directory");
         Image img_o(img);
         imageFile = img_o.getImage(dir, const_cast<QString &>(Setting::CACHE_DIR), it, recurse);
-        plainColors = util.getColors(img, l, parser.value("backend"), Setting::CACHE_DIR, parser.value("saturate"));
+        plainColors = util.getColors(imageFile, l, parser.value("backend"), Setting::CACHE_DIR, parser.value("saturate"));
     }
 
     if (parser.isSet("theme")) {
@@ -282,18 +284,25 @@ int main(int argc, char *argv[]) {
         qDebug() << "cached_wallpaper = util.read_file(os.path.join(CACHE_DIR, 'wal'))";
         qDebug() << "colorsPlain = colors.get()";
         QString wallPath = Util::joinPath(Setting::CACHE_DIR, QStringList() << "walpp");
-        auto cachedWallpaper = util.readFile(wallPath);
+        auto cachedWallpaper = Util::readFile(wallPath);
         QString walStr = QString(cachedWallpaper.at(0));
         plainColors = util.getColors(walStr, l, parser.value("backend"), parser.value("saturate"));
     }
 
     if (parser.isSet("background")) {
         qDebug() << "Set background";
-        if (parser.value("background").startsWith("#")) {}
+        QString bg;
+        if (!parser.value("background").startsWith("#")) {
+            bg = parser.value("background").prepend("#");
+            // TODO: Insert new bg value to nested item
+        }
     }
 
     if (!parser.isSet("skipWallpaper")) {
         qDebug() << "wallpaper.change(colors_plain['wallpaper'])";
+        QString wStr = plainColors.value("wallpaper").toString();
+        Wallpaper wall_o;
+        wall_o.change(wStr);
     }
 
     if (parser.isSet("saveTheme")) {
@@ -304,20 +313,25 @@ int main(int argc, char *argv[]) {
 
     // TODO: if sys.stdout.isatty():
     // TODO: colors.palette()
+    Util::palette();
 
     // TODO: export.every(colors_plain)
 
-    if (parser.isSet("skipMost")) {
+    if (parser.isSet("skipTTY")) {
         qDebug() << "reload.env(tty_reload=!skipTTY)";
+        Reload::env(!parser.isSet("skipTTY"));
     }
 
     if (parser.isSet("externalScript")) {
         qDebug() << "for cmd in args.o:\n"
                     "            util.disown([cmd])";
+        QStringList script = parser.value("externalScript").split(' ');
+        Util::disown(const_cast<QString &>(script.at(0)), QStringList() << script.sliced(1))
     }
 
     if (!parser.isSet("skipMost")) {
         qDebug() << "reload.gtk()";
+        Reload::gtk();
     }
 
     return QCoreApplication::exec();

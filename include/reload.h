@@ -7,11 +7,11 @@ class Reload
 {
 public:
     Reload();
-    static void env(QStringList xrdbFile, bool ttyReload = true);
+    static void env(bool ttyReload = true);
     static void gtk();
 private:
     static void tty(bool ttyReload);
-    static void xrdb(QStringList xrdbFiles);
+    static void xrdb();
     static void i3();
     static void bspwm();
     static void kitty();

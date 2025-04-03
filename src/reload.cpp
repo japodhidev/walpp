@@ -26,10 +26,8 @@ void Reload::tty(bool ttyReload) {
  * @brief xrdb
  * @param xrdbFiles
  */
-void Reload::xrdb(QStringList xrdbFiles) {
-    if (xrdbFiles.empty()) {
-        xrdbFiles = QStringList() << Util::joinPath(Setting::CACHE_DIR, QStringList() << "colors.Xresources");
-    }
+void Reload::xrdb() {
+    QStringList xrdbFiles = QStringList() << Util::joinPath(Setting::CACHE_DIR, QStringList() << "colors.Xresources");
     QString xrdb = "xrdb";
     if(!Util::which(xrdb).isEmpty() & Setting::OS.toLower() != "darwin") {
         foreach (const auto &entry, xrdbFiles) {
@@ -118,8 +116,8 @@ void Reload::sway() {
  * Reload environment
  * @brief Reload::env
  */
-void Reload::env(QStringList xrdbFile, bool ttyReload) {
-    xrdb(std::move(xrdbFile));
+void Reload::env(bool ttyReload) {
+    xrdb();
     i3();
     bspwm();
     kitty();
