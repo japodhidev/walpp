@@ -58,9 +58,9 @@ bool Util::getPID(QString &name) {
  */
 void Util::saveJSONFile(QJsonObject &data, QString &exportFile) {
     QFile jsonFile(exportFile);
-
+    QFileInfo fileInfo(exportFile);
     if (!jsonFile.open(QIODevice::WriteOnly | QIODevice::Text)) {
-        std::string message = "Couldn't open the JSON file for writing!";
+        std::string message = QString("Couldn't open the JSON file '%1' for writing!").arg(fileInfo.absoluteFilePath()).toStdString();
         throw AppException(message);
     }
     QJsonDocument jsonDoc;
@@ -76,9 +76,10 @@ void Util::saveJSONFile(QJsonObject &data, QString &exportFile) {
  */
 void Util::createDir(QString directory) {
     QDir dir;
-    bool success = dir.mkdir(directory);
+    // bool success = dir.mkdir(directory);
+    bool success = dir.mkpath(directory);
     if (!success) {
-        std::string message = "Couldn't create the directory specified!";
+        std::string message = QString("Couldn't create the directory '%1'!").arg(directory).toStdString();
         throw AppException(message);
     }
 }
@@ -96,13 +97,14 @@ void Util::setupLogging() {
  */
 QByteArray Util::readFile(QString &inputFile) {
     QFile qFile(inputFile);
+    QFileInfo fileInfo(inputFile);
     if (qFile.exists()) {
         if (qFile.open(QFile::ReadOnly)) {
             auto result = qFile.readAll();
             qFile.close();
             return result;
         }
-        std::string message = "Couldn't open the file for reading!";
+        std::string message = QString("Couldn't open the file '%1' for reading!").arg(fileInfo.absoluteFilePath()).toStdString();
         throw AppException(message);
     } else {
         std::string message = "Non-existent file requested!";
@@ -116,8 +118,9 @@ QByteArray Util::readFile(QString &inputFile) {
  */
 QJsonObject Util::readJSONFile(QString &inputFile) {
     QFile jsonFile(inputFile);
+    QFileInfo fileInfo(inputFile);
     if (!jsonFile.open(QIODevice::ReadOnly)) {
-        std::string message = "Couldn't open the JSON file for reading!";
+        std::string message = QString("Couldn't open the JSON file '%1'  for reading!").arg(fileInfo.absoluteFilePath()).toStdString();
         throw AppException(message);
     }
     // Read JSON data from file
@@ -142,6 +145,7 @@ QJsonObject Util::readJSONFile(QString &inputFile) {
  */
 QString Util::readRawFile(QString &inputFile) {
     QFile qFile(inputFile);
+    QFileInfo fileInfo(inputFile);
     if (qFile.exists()) {
         if (qFile.open(QFile::ReadOnly | QFile::Text)) {
             QTextStream in(&qFile);
@@ -149,7 +153,7 @@ QString Util::readRawFile(QString &inputFile) {
             qFile.close();
             return text;
         }
-        std::string message = "Couldn't open the file for reading!";
+        std::string message = QString("Couldn't open the file '%1'  for reading!").arg(fileInfo.absoluteFilePath()).toStdString();
         throw AppException(message);
     } else {
         std::string message = "Non-existent file requested!";
@@ -163,16 +167,24 @@ QString Util::readRawFile(QString &inputFile) {
  * @param exportFile
  */
 void Util::saveFile(QString &data, QString &exportFile) {
-    QFile file;
-    QDir::setCurrent("/tmp");
-    file.setFileName(exportFile);
-    if (file.open(QFile::WriteOnly | QFile::Text)) {
-        // Write data to file
-        auto content = QByteArray::fromStdString(data.toStdString());
-        file.write(content);
-        file.close();
+    createDir(exportFile);
+    QFileInfo fileInfo(data);
+    if (fileInfo.exists()) {
+        QFile file;
+        file.setFileName(Util::joinPath(exportFile, QStringList() << fileInfo.fileName()));
+        if (file.open(QFile::WriteOnly | QFile::Text)) {
+            // Read file contents
+            QString content = readRawFile(data);
+            // Write data to file
+            QTextStream out(&file);
+            out << content;
+            file.close();
+        } else {
+            std::string message = QString("Couldn't open the file '%1' for writing!").arg(fileInfo.absoluteFilePath()).toStdString();
+            throw AppException(message);
+        }
     } else {
-        std::string message = "Couldn't open the file for writing!";
+        std::string message = QString("Non-existent file '%1' provided!").arg(fileInfo.absoluteFilePath()).toStdString();
         throw AppException(message);
     }
 }
@@ -245,10 +257,13 @@ QByteArray Util::checkOutput(QString command, QStringList arguments) {
     QProcess process;
     process.setStandardErrorFile(QProcess::nullDevice());
     process.setStandardInputFile(QProcess::nullDevice());
-    process.setArguments(arguments);
-    process.waitForFinished();
+    // process.setArguments(arguments);
+    process.start(command, arguments);
+    process.waitForFinished(-1);
 
-    return process.readAllStandardOutput();
+    QByteArray output = process.readAllStandardOutput();
+
+    return output;
 }
 
 QList<QString> Util::listBackends() {
@@ -394,6 +409,7 @@ QString Util::getBackend(QString &backend) {
 
         return backends.at(randomIndex);
     }
+    
     return backend;
 }
 
@@ -407,16 +423,20 @@ void Util::palette() {
         QString str_i;
         int mod_i = i % 8;
         if (mod_i == 0) {
-            qDebug() << "";
+            ts << Qt::endl;
         }
+
         if (mod_i > 7) {
             str_i = QString("8;5;%1").arg(i);
+        } else {
+            str_i = QString("%1").arg(i);
         }
+
         // TODO: print("\033[4%sm%s\033[0m" % (i, " " * (80 // 20)), end="")
         QString spaces = QString(" ").repeated(80 / 20);
-        ts << QString("\033[4%1m%2\033[0m").arg(i).arg(spaces);
+        ts << QString("\033[4%1m%2\033[0m").arg(str_i, spaces);
     }
-    qDebug() << "";
+    ts << Qt::endl;
 }
 
 /**
@@ -437,11 +457,12 @@ QJsonObject Util::getColors(QString img, bool light, QString backend, QString ca
         // colors["alpha"] = util.Color.alpha_num
         qDebug() << "Found cached colorscheme.";
     } else {
-        qDebug() << "Generating a  colorscheme.";
+        qDebug() << "Generating a colorscheme.";
         QString bEnd = getBackend(backend);
         qDebug() << QString("Using %1 backend.").arg(bEnd);
         if (backend == "wal") {
             QList<QString> colors = Wal::get(img, light);
+            qDebug() << colors;
             bool ok;
             auto saturatedColors = Color::saturateMultiple(colors, QString(sat).toFloat(&ok));
             cs = colorsToMap(saturatedColors, img);

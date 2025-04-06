@@ -14,7 +14,7 @@
  * @return
  */
 QByteArray Wal::runImageMagick(int colorCount, QString &img, QString magickCmd) {
-    return Util::checkOutput(std::move(magickCmd), QStringList() << QString("%1[0]").arg(img) << "-resize" << "25%" << "-colors" << QString("").arg(colorCount) << "-unique-colors" << "txt:-");
+    return Util::checkOutput(magickCmd, QStringList() << QString("%1[0]").arg(img) << "-resize" << "25%" << "-colors" << QString("%1").arg(colorCount) << "-unique-colors" << "txt:-");
 }
 
 /**
@@ -43,7 +43,7 @@ QList<QString> Wal::generateColors(QString &img) {
     QList<QByteArray> rawColors;
     QString magickCmd = hasIM();
 
-    for (int i = 0; i <= 20; i++) {
+    for (int i = 0; i < 20; i++) {
         rawColors = runImageMagick(16 + i, img, magickCmd).split('\n');
 
         if (rawColors.size() > 16) {
@@ -61,11 +61,16 @@ QList<QString> Wal::generateColors(QString &img) {
 
     if (rawColors.size() > 1) {
         foreach (const QByteArray &entry, rawColors) {
-            auto hexColor = entry.split(' ').at(4);
-            QString hexColorStr(hexColor);
-            if (hexColorStr.startsWith("#")) {
-                colorList.append(hexColorStr);
+            if (!entry.startsWith("#")) {
+                QString line(entry);
+                QRegularExpression re(R"(#(?:[0-9a-fA-F]{3}){1,2})");
+                QRegularExpressionMatch match = re.match(line);
+                if (match.hasMatch()) {
+                    auto hexColor = match.captured(0);
+                    colorList.append(hexColor);
+                }
             }
+
         }
     } else {
         qDebug() << "There was an error parsing the output from Imagemagick!";

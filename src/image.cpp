@@ -35,9 +35,14 @@ QString Image::getImage(QString &img, QString &cacheDir, bool iterative, bool re
         std::string message = "No valid image file found!";
         throw AppException(message);
     }
+
     Util util;
-    QString path = Util::joinPath(cacheDir, QStringList() << "walpp");
+    QString name = i.fileName();
+    QString path = Util::joinPath(cacheDir, QStringList() << name);
     util.saveFile(wallpaper, path);
+
+    QTextStream out(stdout);
+    out << "Using image \033[1;37m" << wallpaper << "\033[0m.";
 
     return wallpaper;
 }

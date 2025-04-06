@@ -2,13 +2,18 @@
 #include <QCoreApplication>
 #include <QCommandLineParser>
 #include <QCommandLineOption>
+#include <QTextStream>
 #include "../include/color.h"
 #include "../include/image.h"
 #include "../include/settings.h"
 #include "../include/util.h"
 #include "../include/wallpaper.h"
 #include "../include/reload.h"
+#include "../include/sequences.h"
 
+void parseExitingArgs(QCommandLineParser &parser);
+
+void parseArgs(QCommandLineParser &parser);
 
 int main(int argc, char *argv[]) {
     QCoreApplication coreApplication(argc, argv);
@@ -33,6 +38,11 @@ int main(int argc, char *argv[]) {
     qDebug() << "lighten -> " << color.lighten(20);
     qDebug() << "darken -> " << color.darken(50);
     qDebug() << "saturate -> " << color.saturate(48);*/
+
+    QString confDir = Setting::CONF_DIR;
+    Util::createDir(Util::joinPath(confDir, QStringList() << "templates"));
+    Util::createDir(Util::joinPath(confDir, QStringList() << "colorschemes" << "light"));
+    Util::createDir(Util::joinPath(confDir, QStringList() << "colorschemes" << "dark"));
 
     // Process args
     QCommandLineParser parser;
@@ -67,16 +77,14 @@ int main(int argc, char *argv[]) {
     parser.addOption(theme);
 
     QCommandLineOption iterative(
-        QStringList() << "iterative" << "iterative",
-        QCoreApplication::translate("main", "When walpp is given a directory as input and this flag is used: Go through the images in order instead of shuffled."),
-        QCoreApplication::translate("main", "iterative")
+        "iterative",
+        QCoreApplication::translate("main", "When walpp is given a directory as input and this flag is used: Go through the images in order instead of shuffled.")
         );
     parser.addOption(iterative);
 
     QCommandLineOption recursive(
-        QStringList() << "recursive" << "recursive",
-        QCoreApplication::translate("main", "When walpp is given a directory as input and this flag is used: Search for images recursively in subdirectories instead of the root only."),
-        QCoreApplication::translate("main", "recursive")
+        "recursive",
+        QCoreApplication::translate("main", "When walpp is given a directory as input and this flag is used: Search for images recursively in subdirectories instead of the root only.")
         );
     parser.addOption(recursive);
 
@@ -88,23 +96,20 @@ int main(int argc, char *argv[]) {
     parser.addOption(saturate);
 
     QCommandLineOption preview(
-        QStringList() << "preview" << "preview",
-        QCoreApplication::translate("main", "Print the current color palette."),
-        QCoreApplication::translate("main", "preview")
+        "preview",
+        QCoreApplication::translate("main", "Print the current color palette.")
         );
     parser.addOption(preview);
 
     QCommandLineOption vte(
-        QStringList() << "vte" << "vte",
-        QCoreApplication::translate("main", "Fix text-artifacts printed in VTE terminals."),
-        QCoreApplication::translate("main", "vte")
+        "vte",
+        QCoreApplication::translate("main", "Fix text-artifacts printed in VTE terminals.")
         );
     parser.addOption(vte);
 
     QCommandLineOption deleteCached(
-        QStringList() << "c" << "cached",
-        QCoreApplication::translate("main", "Delete all cached colorschemes."),
-        QCoreApplication::translate("main", "cached")
+        "c",
+        QCoreApplication::translate("main", "Delete all cached colorschemes.")
         );
     parser.addOption(deleteCached);
 
@@ -116,16 +121,14 @@ int main(int argc, char *argv[]) {
     parser.addOption(directory);
 
     QCommandLineOption light(
-        QStringList() << "l" << "light",
-        QCoreApplication::translate("main", "Generate a light colorscheme."),
-        QCoreApplication::translate("main", "light")
+        "l",
+        QCoreApplication::translate("main", "Generate a light colorscheme.")
         );
     parser.addOption(light);
 
     QCommandLineOption skipWallpaper(
-        QStringList() << "n" << "skipWallpaper",
-        QCoreApplication::translate("main", "Skip setting the wallpaper."),
-        QCoreApplication::translate("main", "skipWallpaper")
+        "n",
+        QCoreApplication::translate("main", "Skip setting the wallpaper.")
         );
     parser.addOption(skipWallpaper);
 
@@ -144,58 +147,52 @@ int main(int argc, char *argv[]) {
     parser.addOption(saveTheme);
 
     QCommandLineOption quietMode(
-        QStringList() << "q" << "quietMode",
-        QCoreApplication::translate("main", "Quiet mode, don't print anything."),
-        QCoreApplication::translate("main", "quietMode")
+        "q",
+        QCoreApplication::translate("main", "Quiet mode, don't print anything.")
         );
     parser.addOption(quietMode);
 
-    // QCommandLineOption restore(
-    //     QStringList() << "r" << "restore",
-    //     QCoreApplication::translate("main", "Restore previous colorscheme."),
-    //     QCoreApplication::translate("main", "restore")
-    //     );
-    // parser.addOption(restore);
-
     QCommandLineOption skipTerminal(
-        QStringList() << "s" << "skipTerminal",
-        QCoreApplication::translate("main", "Skip changing colors in terminals."),
-        QCoreApplication::translate("main", "skipTerminal")
+        "s",
+        QCoreApplication::translate("main", "Skip changing colors in terminals.")
         );
     parser.addOption(skipTerminal);
 
     QCommandLineOption skipTTY(
-        QStringList() << "t" << "skipTTY",
-        QCoreApplication::translate("main", "Skip changing colors in tty."),
-        QCoreApplication::translate("main", "skipTTY")
+        "t",
+        QCoreApplication::translate("main", "Skip changing colors in tty.")
         );
     parser.addOption(skipTTY);
 
     QCommandLineOption version(
-        QStringList() << "v" << "version",
-        QCoreApplication::translate("main", "Print walpp version."),
-        QCoreApplication::translate("main", "version")
+        "v",
+        QCoreApplication::translate("main", "Print walpp version.")
         );
     parser.addOption(version);
 
     QCommandLineOption lastWal(
-        QStringList() << "w" << "lastWal",
-        QCoreApplication::translate("main", "Use last used wallpaper for color generation."),
-        QCoreApplication::translate("main", "lastWal")
+        "w",
+        QCoreApplication::translate("main", "Use last used wallpaper for color generation.")
         );
     parser.addOption(lastWal);
 
     QCommandLineOption skipMost(
-        QStringList() << "e" << "skipMost",
-        QCoreApplication::translate("main", "Skip reloading gtk/xrdb/i3/sway/polybar"),
-        QCoreApplication::translate("main", "skipMost")
+        "e",
+        QCoreApplication::translate("main", "Skip reloading gtk/xrdb/i3/sway/polybar")
         );
     parser.addOption(skipMost);
-
     // Parse provided arguments
     parser.process(coreApplication);
-    Util util;
+    // Process exiting args
+    parseExitingArgs(parser);
+    // Process args
+    parseArgs(parser);
 
+    return QCoreApplication::exec();
+}
+
+void parseExitingArgs(QCommandLineParser &parser) {
+    Util util;
     // Process args that exit
     if (parser.optionNames().size() == 0) {
         parser.showHelp();
@@ -215,17 +212,13 @@ int main(int argc, char *argv[]) {
         std::exit(EXIT_FAILURE);
     }
 
-    // if (parser.isSet("restore")) {
-    //     qDebug() << "reload.colors()";
-    // }
-
-    if (parser.isSet("cached")) {
+    if (parser.isSet("c")) {
         qDebug() << "delete cached schemes";
         QString schemeDir = Util::joinPath(Setting::CACHE_DIR, QStringList() << "schemes");
         qDebug() << QString("TODO: Remove %1 directory.").arg(schemeDir);
     }
 
-    if (!parser.isSet("directory") & !parser.isSet("theme") & !parser.isSet("lastWal") & !parser.isSet("backend")) {
+    if (!parser.isSet("directory") & !parser.isSet("theme") & !parser.isSet("w") & !parser.isSet("backend")) {
         qDebug() << "Error: No input specified.";
         qDebug() << "--backend, --theme, -i or -R are required.";
         std::exit(EXIT_FAILURE);
@@ -237,14 +230,19 @@ int main(int argc, char *argv[]) {
     }
 
     if (parser.value("backend") == "list_backends") {
+        QTextStream ts(stdout);
         foreach (const auto &b, Util::listBackends()) {
-            qDebug() << b;
+            ts << "\n - " << "\033[1;32mBackends\033[0m:" << b;
         }
         std::exit(EXIT_SUCCESS);
     }
+}
 
+void parseArgs(QCommandLineParser &parser) {
+    Util util;
+    Color color;
     // Process args
-    if (parser.isSet("quietMode")) {
+    if (parser.isSet("q")) {
         qDebug() << "logging.getLogger().disabled = True";
         // Redirect stdout to stderr then to /dev/null
         qDebug() << "sys.stdout = sys.stderr = open(os.devnull, 'w')";
@@ -255,20 +253,20 @@ int main(int argc, char *argv[]) {
         bool ok;
         color.alphaValue = parser.value("alpha").toDouble(&ok);
     }
+
     QString imageFile;
     QJsonObject plainColors;
-    bool it = !parser.value("iterative").isEmpty();
-    bool recurse = !parser.value("recursive").isEmpty();
-    bool l = !parser.value("light").isEmpty();
-    QString dir = parser.value("directory");
+    bool it = parser.isSet("iterative");
+    bool recurse = parser.isSet("recursive");
+    bool l = parser.isSet("l");
 
     if (parser.isSet("directory")) {
-        qDebug() << "imageFile = image.get(...)";
-        qDebug() << "colorsPlain = colors.get(...)";
         auto img = parser.value("directory");
         Image img_o(img);
-        imageFile = img_o.getImage(dir, const_cast<QString &>(Setting::CACHE_DIR), it, recurse);
-        plainColors = util.getColors(imageFile, l, parser.value("backend"), Setting::CACHE_DIR, parser.value("saturate"));
+        imageFile = img_o.getImage(img, const_cast<QString &>(Setting::CACHE_DIR), it, recurse);
+        qDebug() << imageFile;
+        QString bEnd = parser.isSet("backend") ? parser.value("backend") : "wal";
+        plainColors = util.getColors(imageFile, l, bEnd, Setting::CACHE_DIR, parser.value("saturate"));
     }
 
     if (parser.isSet("theme")) {
@@ -279,7 +277,7 @@ int main(int argc, char *argv[]) {
         qDebug() << "colorsPlain = theme.file(os.path.join(CACHE_DIR, 'colors.json'))";
     }*/
 
-    if (parser.isSet("lastWal")) {
+    if (parser.isSet("w")) {
         qDebug() << "cached_wallpaper = util.read_file(os.path.join(CACHE_DIR, 'wal'))";
         qDebug() << "colorsPlain = colors.get()";
         QString wallPath = Util::joinPath(Setting::CACHE_DIR, QStringList() << "walpp");
@@ -297,7 +295,7 @@ int main(int argc, char *argv[]) {
         }
     }
 
-    if (!parser.isSet("skipWallpaper")) {
+    if (!parser.isSet("n")) {
         qDebug() << "wallpaper.change(colors_plain['wallpaper'])";
         QString wStr = plainColors.value("wallpaper").toString();
         Wallpaper wall_o;
@@ -308,6 +306,9 @@ int main(int argc, char *argv[]) {
         qDebug() << "theme.save(colors_plain, skipWallpaper, light)";
     }
 
+    Sequences seqs;
+    seqs.send(plainColors, Setting::CACHE_DIR, false, true);
+
     // TODO: sequences.send(colors_plain, to_send=not args.s, vte_fix=args.vte)
 
     // TODO: if sys.stdout.isatty():
@@ -316,9 +317,9 @@ int main(int argc, char *argv[]) {
 
     // TODO: export.every(colors_plain)
 
-    if (parser.isSet("skipTTY")) {
+    if (parser.isSet("t")) {
         qDebug() << "reload.env(tty_reload=!skipTTY)";
-        Reload::env(!parser.isSet("skipTTY"));
+        Reload::env(!parser.isSet("t"));
     }
 
     if (parser.isSet("externalScript")) {
@@ -328,15 +329,8 @@ int main(int argc, char *argv[]) {
         Util::disown(const_cast<QString &>(script.at(0)), QStringList() << script.sliced(1));
     }
 
-    if (!parser.isSet("skipMost")) {
+    if (!parser.isSet("e")) {
         qDebug() << "reload.gtk()";
         Reload::gtk();
     }
-    QString confDir = Setting::CONF_DIR;
-    Util::createDir(Util::joinPath(confDir, QStringList() << "templates"));
-    Util::createDir(Util::joinPath(confDir, QStringList() << "colorschemes" << "light"));
-    Util::createDir(Util::joinPath(confDir, QStringList() << "colorschemes" << "dark"));
-
-    return QCoreApplication::exec();
 }
-
