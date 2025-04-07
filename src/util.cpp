@@ -59,6 +59,10 @@ bool Util::getPID(QString &name) {
 void Util::saveJSONFile(QJsonObject &data, QString &exportFile) {
     QFile jsonFile(exportFile);
     QFileInfo fileInfo(exportFile);
+
+    // Create directory if it doesn't already exist
+    createDir(fileInfo.absolutePath());
+
     if (!jsonFile.open(QIODevice::WriteOnly | QIODevice::Text)) {
         std::string message = QString("Couldn't open the JSON file '%1' for writing!").arg(fileInfo.absoluteFilePath()).toStdString();
         throw AppException(message);
@@ -432,7 +436,6 @@ void Util::palette() {
             str_i = QString("%1").arg(i);
         }
 
-        // TODO: print("\033[4%sm%s\033[0m" % (i, " " * (80 // 20)), end="")
         QString spaces = QString(" ").repeated(80 / 20);
         ts << QString("\033[4%1m%2\033[0m").arg(str_i, spaces);
     }

@@ -244,8 +244,8 @@ QString Color::hexToXRgba() const {
  */
 QString Color::blendColor(QString &color, QString &otherColor) {
     // Validation
-    if (!QColor::isValidColorName(color) | QColor::isValidColorName(otherColor)){
-        std::string message = "Invalid HEX color string provided!";
+    if (!QColor::isValidColorName(color) | !QColor::isValidColorName(otherColor)){
+        std::string message = QString("Invalid HEX color string '%1' / '%2' provided!").arg(color, otherColor).toStdString();
         throw AppException(message);
     }
 

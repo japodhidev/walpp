@@ -80,7 +80,7 @@ QList<QString> Wal::generateColors(QString &img) {
 }
 
 /**
- * Adjust the generated colors and store them in a JsonObject
+ * Adjust the generated colors and store them in a list
  * @brief Wal::adjust
  * @param colors
  * @param light
@@ -94,8 +94,9 @@ QList<QString> Wal::adjust(QList<QString> colors, bool light) {
     foreach (const QString &entry, colors.sliced(8, 8)) {
         rawColors.append(entry);
     }
-    // Slice starting from the item at index 8 to the item before last
-    foreach (const QString &entry, colors.sliced(8, colors.size() - 1)) {
+    // Slice starting from the item at index 8
+    // TODO: to the item before last
+    foreach (const QString &entry, colors.sliced(8)) {
         rawColors.append(entry);
     }
 

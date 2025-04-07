@@ -29,7 +29,7 @@ void Sequences::send(QJsonObject colors, QString cacheDir, bool toSend, bool vte
         // Find & write to all terms
         QList<QString> terminals = findTerminals();
 
-        for (QString terminal : terminals) {
+        foreach (const QString &terminal, terminals) {
             Util::saveFile(sequences, terminal);
         }
     }
@@ -136,7 +136,7 @@ QList<QString> Sequences::findTerminals() {
         regex.setPattern(QRegularExpression::escape(pattern));
         QFileInfoList files = dir.entryInfoList(QDir::Files);
 
-        for (const QFileInfo &fileInfo : files) {
+        foreach (const QFileInfo &fileInfo, files) {
             if (regex.match(fileInfo.fileName()).hasMatch()) {
                 terminals.append(fileInfo.fileName());
             }

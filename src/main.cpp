@@ -306,8 +306,7 @@ void parseArgs(QCommandLineParser &parser) {
         qDebug() << "theme.save(colors_plain, skipWallpaper, light)";
     }
 
-    Sequences seqs;
-    seqs.send(plainColors, Setting::CACHE_DIR, false, true);
+    Sequences::send(plainColors, Setting::CACHE_DIR, false, true);
 
     // TODO: sequences.send(colors_plain, to_send=not args.s, vte_fix=args.vte)
 
