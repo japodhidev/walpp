@@ -481,3 +481,8 @@ QJsonObject Util::getColors(QString img, bool light, QString backend, QString ca
 
     return cs;
 }
+
+int Util::getRandomInt(int min, int max) {
+    QRandomGenerator rd;
+    return rd.bounded(min, max);
+}

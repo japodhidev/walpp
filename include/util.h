@@ -33,6 +33,7 @@ public:
     QString getBackend(QString &backend);
     static void palette();
     QJsonObject getColors(QString img, bool light = false, QString backend = "wal", QString cacheDir = Setting::CACHE_DIR,  QString sat = "");
+    static int getRandomInt(int min, int max);
 };
 
 #endif // UTIL_H

@@ -23,9 +23,10 @@ private:
     QString getRandomUserTheme();
     QJsonObject parse(QString themeFile);
     QList<QString> listUserThemes();
-    QList<QString> listThemes();
+    QList<QString> listThemes(bool mode = true);
     QJsonObject terminalSexyToWal(QJsonObject data);
     void listAllThemes();
+    static QList<QString> listUtil(QString &dirName, bool mode);
 
 };
 

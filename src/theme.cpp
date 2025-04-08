@@ -1,5 +1,8 @@
+#include <QJsonArray>
+#include <QDir>
 #include "../include/theme.h"
 #include "../include/color.h"
+#include "../include/appexception.h"
 
 Theme::Theme() = default;
 
@@ -77,7 +80,10 @@ QJsonObject Theme::import(QString inputFile, bool light) {
  * @return
  */
 QString Theme::getRandomTheme(bool mode) {
-    return {};
+    QList<QString> themes = listUserThemes(mode);
+    int randomIdx = Util::getRandomInt(0, (int)themes.size());
+
+    return themes.at(randomIdx);
 }
 
 /**
@@ -86,7 +92,10 @@ QString Theme::getRandomTheme(bool mode) {
  * @return
  */
 QString Theme::getRandomUserTheme() {
-    return {};
+    QList<QString> themes = listThemes(mode);
+    int randomIdx = Util::getRandomInt(0, (int)themes.size());
+
+    return themes.at(randomIdx);
 }
 
 QJsonObject Theme::parse(QString themeFile) {
@@ -114,7 +123,12 @@ QJsonObject Theme::parse(QString themeFile) {
  * @return
  */
 QList<QString> Theme::listUserThemes() {
-    return {};
+    QString dark_dir  = Util::joinPath(Setting::CONF_DIR, QStringList() << "colorschemes" << "dark");
+    QString light_dir = Util::joinPath(Setting::CONF_DIR, QStringList() << "colorschemes" << "light");
+
+    QList<QString> themes = listUtil(dark_dir, true) + listUtil(light_dir, false);
+
+    return themes;
 }
 
 /**
@@ -122,8 +136,11 @@ QList<QString> Theme::listUserThemes() {
  * @brief Theme::listThemes
  * @return
  */
-QList<QString> Theme::listThemes() {
-    return {};
+QList<QString> Theme::listThemes(bool mode) {
+    QString themeMode = mode ? "dark" : "light";
+    QString themeDir  = Util::joinPath(Setting::MODULE_DIR, QStringList() << "colorschemes" << themeMode);
+
+    return listUtil(themeDir, mode);
 }
 
 /**
@@ -134,7 +151,7 @@ QList<QString> Theme::listThemes() {
  */
 QJsonObject Theme::terminalSexyToWal(QJsonObject data) {
     QJsonObject result = {};
-    result.insert("colors", QJsonValue({}));
+    result.insert("colors", {});
     QJsonObject special {
         {"foreground", data["foreground"]},
         {"background", data["background"]},
@@ -142,7 +159,7 @@ QJsonObject Theme::terminalSexyToWal(QJsonObject data) {
     };
     result.insert("special", special);
 
-    auto colorArray = data.value("color").toArray();
+    QJsonArray colorArray = data.value("color").toArray();
     QJsonObject c {};
     for (int i = 0; i < colorArray.size(); i++) {
         QString key = QString("color%1").arg(i);
@@ -158,5 +175,95 @@ QJsonObject Theme::terminalSexyToWal(QJsonObject data) {
  * @brief Theme::listAllThemes
  */
 void Theme::listAllThemes() {
+    QList<QString> darkThemes = listThemes();
+    QList<QString> lightThemes = listThemes(false);
+    QList<QString> userThemes = listUserThemes();
 
+    foreach (QString entry, darkThemes) {
+        entry.replace(".json", "");
+    }
+
+    foreach (QString entry, lightThemes) {
+        entry.replace(".json", "");
+    }
+
+    foreach (QString entry, userThemes) {
+        entry.replace(".json", "");
+    }
+
+    QString lastUsedTheme;
+    try {
+        QString path = Util::joinPath(Setting::CACHE_DIR, QStringList() << "last_used_theme");
+        lastUsedTheme = Util::readRawFile(path);
+    } catch (AppException &exception) {
+        lastUsedTheme = "";
+    }
+    QTextStream out(stdout);
+    if (!userThemes.isEmpty()) {
+        out << "\033[1;32mUser Themes\033[0m:" << Qt::endl;
+        foreach (const QString &entry, userThemes) {
+            QString outStr = entry;
+            if (entry == lastUsedTheme) {
+                outStr.append(" (last used)");
+            }
+            out << outStr.prepend("\n - ");
+        }
+    }
+
+    if (!darkThemes.isEmpty()) {
+        out << "\033[1;32mUser Themes\033[0m:" << Qt::endl;
+        foreach (const QString &entry, darkThemes) {
+            QString outStr = entry;
+            if (entry == lastUsedTheme) {
+                outStr.append(" (last used)");
+            }
+            out << outStr.prepend("\n - ");
+        }
+    }
+
+    if (!lightThemes.isEmpty()) {
+        out << "\033[1;32mUser Themes\033[0m:" << Qt::endl;
+                foreach (const QString &entry, lightThemes) {
+                QString outStr = entry;
+                if (entry == lastUsedTheme) {
+                    outStr.append(" (last used)");
+                }
+                out << outStr.prepend("\n - ");
+            }
+    }
+
+    out << "\033[1;32mExtra\033[0m:" << Qt::endl;
+    out << " - random (select a random dark theme)" << Qt::endl;
+    out << " - random_dark (select a random dark theme)" << Qt::endl;
+    out << " - random_light (select a random light theme)" << Qt::endl;
+    out << " - random_user (select a random user theme)" << Qt::endl;
+
+}
+
+/**
+ * Theme listing utility. Returns a sorted list of themes.
+ * @param dirName
+ * @param mode
+ * @return
+ */
+QList<QString> Theme::listUtil(QString &dirName, bool mode) {
+    QString themeMode = mode ? "dark" : "light";
+    QFileInfo themeDir(Util::joinPath(dirName, QStringList() << "colorschemes" << themeMode));
+
+    if (!themeDir.exists() & !themeDir.isDir()) {
+        std::string message = QString("%1 isn't a valid directory!").arg(themeDir.absolutePath()).toStdString();
+        throw AppException(message);
+    }
+
+
+    QList<QString> themes;
+    foreach (const auto &entry, themeDir.dir().entryInfoList()) {
+        if (entry.isFile()) {
+            themes.append(entry.absoluteFilePath());
+        }
+    }
+    // Sort themes
+    themes.sort();
+
+    return themes;
 }
