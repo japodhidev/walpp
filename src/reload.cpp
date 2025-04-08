@@ -46,8 +46,6 @@ void Reload::gtk() {
         QString gtkReload = Util::joinPath(Setting::MODULE_DIR, QStringList() << "scripts" << "gtk_reload.py");
         QString cmd = "python2";
         Util::disown(cmd, QStringList() << gtkReload);
-    } else {
-        qDebug() << "GTK2 reload support requires Python 2.";
     }
 }
 

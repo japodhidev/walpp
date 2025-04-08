@@ -13,7 +13,7 @@
  * @param magickCmd
  * @return
  */
-QByteArray Wal::runImageMagick(int colorCount, QString &img, QString magickCmd) {
+QByteArray Wal::runImageMagick(int colorCount, QString &img, QString &magickCmd) {
     return Util::checkOutput(magickCmd, QStringList() << QString("%1[0]").arg(img) << "-resize" << "25%" << "-colors" << QString("%1").arg(colorCount) << "-unique-colors" << "txt:-");
 }
 
@@ -60,10 +60,10 @@ QList<QString> Wal::generateColors(QString &img) {
     }
 
     if (rawColors.size() > 1) {
+        QRegularExpression re(R"(#(?:[0-9a-fA-F]{3}){1,2})");
         foreach (const QByteArray &entry, rawColors) {
             if (!entry.startsWith("#")) {
                 QString line(entry);
-                QRegularExpression re(R"(#(?:[0-9a-fA-F]{3}){1,2})");
                 QRegularExpressionMatch match = re.match(line);
                 if (match.hasMatch()) {
                     auto hexColor = match.captured(0);
@@ -75,7 +75,7 @@ QList<QString> Wal::generateColors(QString &img) {
     } else {
         qDebug() << "There was an error parsing the output from Imagemagick!";
     }
-
+    qDebug() << "generate: " << colorList;
     return colorList;
 }
 
@@ -94,9 +94,10 @@ QList<QString> Wal::adjust(QList<QString> colors, bool light) {
     foreach (const QString &entry, colors.sliced(8, 8)) {
         rawColors.append(entry);
     }
-    // Slice starting from the item at index 8
-    // TODO: to the item before last
-    foreach (const QString &entry, colors.sliced(8)) {
+    // Slice starting from the item at index 8 to the item before last
+    auto slicedColors = colors.sliced(8);
+    slicedColors.removeLast();
+    foreach (const QString &entry, slicedColors) {
         rawColors.append(entry);
     }
 
@@ -104,7 +105,7 @@ QList<QString> Wal::adjust(QList<QString> colors, bool light) {
     Color color_o;
     if (light) {
         foreach (QString entry, rawColors) {
-            entry = color_o.saturate(50, entry);
+            entry = Color::c_saturate(0.5, entry);
         }
         rawColors.replace(0, color_o.lighten(85, colors.last()));
         rawColors.replace(7, colors.at(0));
@@ -122,7 +123,7 @@ QList<QString> Wal::adjust(QList<QString> colors, bool light) {
         QString thirdColor = rawColors.at(15);
         rawColors.replace(15, Color::blendColor(thirdColor, secondColor));
     }
-
+    qDebug() << "adjust: " << rawColors;
     return rawColors;
 }
 

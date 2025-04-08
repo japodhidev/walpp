@@ -18,14 +18,14 @@ public:
     Theme();
     void save(QJsonObject colors, QString name, bool light = false);
     QJsonObject import(QString inputFile, bool light = false);
+    static void listAllThemes();
 private:
-    QString getRandomTheme(bool mode = true);
-    QString getRandomUserTheme();
-    QJsonObject parse(QString themeFile);
-    QList<QString> listUserThemes();
-    QList<QString> listThemes(bool mode = true);
-    QJsonObject terminalSexyToWal(QJsonObject data);
-    void listAllThemes();
+    static QString getRandomTheme(bool mode = true);
+    static QString getRandomUserTheme();
+    static QJsonObject parse(QString themeFile);
+    static QList<QString> listUserThemes();
+    static QList<QString> listThemes(bool mode = true);
+    static QJsonObject terminalSexyToWal(QJsonObject data);
     static QList<QString> listUtil(QString &dirName, bool mode);
 
 };

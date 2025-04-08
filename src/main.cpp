@@ -5,11 +5,10 @@
 #include <QTextStream>
 #include "../include/color.h"
 #include "../include/image.h"
-#include "../include/settings.h"
-#include "../include/util.h"
-#include "../include/wallpaper.h"
 #include "../include/reload.h"
 #include "../include/sequences.h"
+#include "../include/theme.h"
+#include "../include/wallpaper.h"
 
 void parseExitingArgs(QCommandLineParser &parser);
 
@@ -21,23 +20,6 @@ int main(int argc, char *argv[]) {
     QCoreApplication::setApplicationVersion(Setting::version);
     QString sampleColor = "#FBAF28";
     Color color(sampleColor);
-    /*qDebug() << "color -> " << color.walColor.name(QColor::HexRgb);
-    qDebug() << "rgb -> " << color.rgb();
-    qDebug() << "rgba -> " << color.rgba();
-    qDebug() << "decimal -> " << color.decimal();
-    qDebug() << "decimal strip -> " << color.decimalStrip();
-    qDebug() << "xrgba -> " << color.xrgba();
-    qDebug() << "octal -> " << color.octal();
-    qDebug() << "octal strip -> " << color.octalStrip();
-    qDebug() << "alpha -> " << color.alpha();
-    qDebug() << "alpha decimal -> " << color.alphaDecimal();
-    qDebug() << "strip -> " << color.strip();
-    qDebug() << "red -> " << color.red();
-    qDebug() << "green -> " << color.green();
-    qDebug() << "blue -> " << color.blue();
-    qDebug() << "lighten -> " << color.lighten(20);
-    qDebug() << "darken -> " << color.darken(50);
-    qDebug() << "saturate -> " << color.saturate(48);*/
 
     QString confDir = Setting::CONF_DIR;
     Util::createDir(Util::joinPath(confDir, QStringList() << "templates"));
@@ -194,7 +176,7 @@ int main(int argc, char *argv[]) {
 void parseExitingArgs(QCommandLineParser &parser) {
     Util util;
     // Process args that exit
-    if (parser.optionNames().size() == 0) {
+    if (parser.optionNames().empty()) {
         parser.showHelp();
     }
 
@@ -203,7 +185,7 @@ void parseExitingArgs(QCommandLineParser &parser) {
 
     if (parser.isSet("preview")) {
         qDebug() << "Current colorscheme:";
-        util.palette();
+        Util::palette();
         std::exit(EXIT_SUCCESS);
     }
 
@@ -225,7 +207,7 @@ void parseExitingArgs(QCommandLineParser &parser) {
     }
 
     if (parser.value("theme") == "list_themes") {
-        qDebug() << "theme.list_out()";
+        Theme::listAllThemes();
         std::exit(EXIT_SUCCESS);
     }
 
@@ -249,7 +231,6 @@ void parseArgs(QCommandLineParser &parser) {
     }
 
     if (parser.isSet("alpha")) {
-        qDebug() << "util.Color.alpha_num = alpha";
         bool ok;
         color.alphaValue = parser.value("alpha").toDouble(&ok);
     }
@@ -259,14 +240,14 @@ void parseArgs(QCommandLineParser &parser) {
     bool it = parser.isSet("iterative");
     bool recurse = parser.isSet("recursive");
     bool l = parser.isSet("l");
+    QString saturation = parser.isSet("saturate") ? parser.value("saturate") : "0";
 
     if (parser.isSet("directory")) {
         auto img = parser.value("directory");
         Image img_o(img);
         imageFile = img_o.getImage(img, const_cast<QString &>(Setting::CACHE_DIR), it, recurse);
-        qDebug() << imageFile;
         QString bEnd = parser.isSet("backend") ? parser.value("backend") : "wal";
-        plainColors = util.getColors(imageFile, l, bEnd, Setting::CACHE_DIR, parser.value("saturate"));
+        plainColors = util.getColors(imageFile, l, bEnd, Setting::CACHE_DIR, saturation);
     }
 
     if (parser.isSet("theme")) {
@@ -278,12 +259,10 @@ void parseArgs(QCommandLineParser &parser) {
     }*/
 
     if (parser.isSet("w")) {
-        qDebug() << "cached_wallpaper = util.read_file(os.path.join(CACHE_DIR, 'wal'))";
-        qDebug() << "colorsPlain = colors.get()";
         QString wallPath = Util::joinPath(Setting::CACHE_DIR, QStringList() << "walpp");
         auto cachedWallpaper = Util::readFile(wallPath);
         QString walStr = QString(cachedWallpaper.at(0));
-        plainColors = util.getColors(walStr, l, parser.value("backend"), parser.value("saturate"));
+        plainColors = util.getColors(walStr, l, parser.value("backend"), saturation);
     }
 
     if (parser.isSet("background")) {
@@ -296,28 +275,24 @@ void parseArgs(QCommandLineParser &parser) {
     }
 
     if (!parser.isSet("n")) {
-        qDebug() << "wallpaper.change(colors_plain['wallpaper'])";
         QString wStr = plainColors.value("wallpaper").toString();
         Wallpaper wall_o;
         wall_o.change(wStr);
     }
 
     if (parser.isSet("saveTheme")) {
-        qDebug() << "theme.save(colors_plain, skipWallpaper, light)";
+        Theme th;
+        th.save(plainColors, parser.value("saveTheme"), l);
     }
 
     Sequences::send(plainColors, Setting::CACHE_DIR, false, true);
 
-    // TODO: sequences.send(colors_plain, to_send=not args.s, vte_fix=args.vte)
-
     // TODO: if sys.stdout.isatty():
-    // TODO: colors.palette()
     Util::palette();
 
     // TODO: export.every(colors_plain)
 
     if (parser.isSet("t")) {
-        qDebug() << "reload.env(tty_reload=!skipTTY)";
         Reload::env(!parser.isSet("t"));
     }
 
@@ -329,7 +304,6 @@ void parseArgs(QCommandLineParser &parser) {
     }
 
     if (!parser.isSet("e")) {
-        qDebug() << "reload.gtk()";
         Reload::gtk();
     }
 }

@@ -322,3 +322,16 @@ QList<QString> Color::saturateMultiple(QList<QString> &colors, float amount) {
     return saturatedColors;
 }
 
+/**
+ * Saturate a hex color
+ * @param amount
+ * @param color
+ * @return
+ */
+QString Color::c_saturate(float amount, QString color) {
+    QColor colour = validateColorStr(color);
+    float saturation = colour.saturationF() * (1 + amount);
+    QColor hslColour = QColor::fromHslF(colour.hueF(), saturation, colour.lightnessF());
+
+    return hslColour.name(QColor::HexRgb);
+}

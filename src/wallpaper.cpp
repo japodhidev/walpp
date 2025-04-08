@@ -162,7 +162,7 @@ void Wallpaper::setMacWallpaper(QString &img) {}
 void Wallpaper::change(QString &img) {
     QFileInfo fileInfo = QFileInfo(img);
     if (!fileInfo.isFile()) {
-        std::string message = "Unexpected argument specified. Expected a file.";
+        std::string message = "Unexpected wallpaper argument specified. Expected a file.";
         throw AppException(message);
     }
 

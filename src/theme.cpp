@@ -32,11 +32,7 @@ QJsonObject Theme::import(QString inputFile, bool light) {
     // Create module directory
     Util::createDir(Util::joinPath(Setting::MODULE_DIR, QStringList() << "colorschemes" << "dark"));
 
-    QString themeName = inputFile.append(".json");
-    QString mode = light ? "light" : "dark";
-
-    QString userThemeFile = Util::joinPath(Setting::CONF_DIR, QStringList() << "colorschemes" << mode << themeName);
-    QString themeFile = Util::joinPath(Setting::MODULE_DIR, QStringList() << "colorschemes" << mode << themeName);
+    QString themeFile;
 
     // Find theme file
     if (inputFile == "random" | inputFile == "random_dark") {
@@ -45,26 +41,29 @@ QJsonObject Theme::import(QString inputFile, bool light) {
         themeFile = getRandomTheme(false);
     } else if (inputFile == "random_user") {
         themeFile = getRandomUserTheme();
-    }
+    } else {
+        QString mode = light ? "light" : "dark";
+        QString themeName = inputFile.endsWith(".json") ? inputFile : inputFile.append(".json");
+        QString userThemeFile = Util::joinPath(Setting::CONF_DIR, QStringList() << "colorschemes" << mode << themeName);
+        themeFile = Util::joinPath(Setting::MODULE_DIR, QStringList() << "colorschemes" << mode << themeName);
 
-    QFileInfo ut_info(userThemeFile);
-    if (ut_info.exists() & ut_info.isFile()) {
-        themeFile = ut_info.absoluteFilePath();
-    }
-
-    QFileInfo i_info(inputFile);
-    if (i_info.exists() & i_info.isFile()) {
-        themeFile = i_info.absoluteFilePath();
+        QFileInfo ut_info(userThemeFile);
+        QFileInfo i_info(inputFile);
+        if (ut_info.exists() & ut_info.isFile()) {
+            themeFile = ut_info.absoluteFilePath();
+        } else if (i_info.exists() & i_info.isFile()) {
+            themeFile = i_info.absoluteFilePath();
+        }
     }
 
     // Parse the theme file
     QTextStream out(stdout);
     QFileInfo t_info(themeFile);
     if (t_info.exists() & t_info.isFile()) {
-        out << QString("Set theme to \033[1;37m%1\033[0m.").arg(t_info.baseName());
-        QString baseName = t_info.baseName();
+        out << QString("Set theme to \033[1;37m%1\033[0m.").arg(t_info.fileName()) << Qt::endl;
+        QString fileName = t_info.absoluteFilePath();
         QString path = Util::joinPath(Setting::CACHE_DIR, QStringList() << "last_used_theme");
-        Util::saveFile(baseName, path);
+        Util::saveFile(fileName, path);
 
         return parse(t_info.absoluteFilePath());
     }
@@ -80,7 +79,7 @@ QJsonObject Theme::import(QString inputFile, bool light) {
  * @return
  */
 QString Theme::getRandomTheme(bool mode) {
-    QList<QString> themes = listUserThemes(mode);
+    QList<QString> themes = listUserThemes();
     int randomIdx = Util::getRandomInt(0, (int)themes.size());
 
     return themes.at(randomIdx);
@@ -92,7 +91,7 @@ QString Theme::getRandomTheme(bool mode) {
  * @return
  */
 QString Theme::getRandomUserTheme() {
-    QList<QString> themes = listThemes(mode);
+    QList<QString> themes = listUserThemes();
     int randomIdx = Util::getRandomInt(0, (int)themes.size());
 
     return themes.at(randomIdx);

@@ -15,11 +15,11 @@ Sequences::Sequences() = default;
  * @param vteFix   [description]
  */
 void Sequences::send(QJsonObject colors, QString cacheDir, bool toSend, bool vteFix) {
-    QString ttyPatern;
+    QString ttyPattern;
     if (Setting::OS.toLower() == "darwin") {
-        ttyPatern = "/dev/ttys00[0-9]*";
+        ttyPattern = "/dev/ttys00[0-9]*";
     } else {
-        ttyPatern = "/dev/pts/[0-9]*";
+        ttyPattern = "/dev/pts/[0-9]*";
     }
 
     auto sequences = createSequences(colors, vteFix);
@@ -29,12 +29,12 @@ void Sequences::send(QJsonObject colors, QString cacheDir, bool toSend, bool vte
         // Find & write to all terms
         QList<QString> terminals = findTerminals();
 
-        foreach (const QString &terminal, terminals) {
+        foreach (QString terminal, terminals) {
             Util::saveFile(sequences, terminal);
         }
     }
     QString seqPath = Util::joinPath(cacheDir, QStringList() << "sequences");
-    Util::saveFile(sequences, seqPath);
+    Util::saveFile(sequences, seqPath, false);
     qDebug() << "Set terminal colors";
 }
 
@@ -89,7 +89,7 @@ QString Sequences::setItermTabColor(rgb_t color) {
  * @return        [description]
  */
 QString Sequences::createSequences(QJsonObject colors, bool vteFix) {
-    QString alpha = colors.value("alpha").toString();
+    QString alpha = QString("%1").arg(colors.value("alpha").toInt());
     QList<QString> seqs;
 
     for (int i = 0; i <= 16; i++) {
@@ -123,7 +123,7 @@ QString Sequences::createSequences(QJsonObject colors, bool vteFix) {
         // FIXME sequences += set_iterm_tab_color(colors["special"]["background"])
     }
 
-    return {};
+    return seqs.join("");
 }
 
 QList<QString> Sequences::findTerminals() {

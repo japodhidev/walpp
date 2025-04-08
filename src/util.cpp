@@ -1,8 +1,8 @@
-#include "../include/util.h"
-#include "../include/settings.h"
 #include "../include/appexception.h"
-#include "../include/color.h"
 #include "../include/backend.h"
+#include "../include/color.h"
+#include "../include/settings.h"
+#include "../include/theme.h"
 #include <QFile>
 #include <QIODevice>
 #include <QDir>
@@ -25,8 +25,13 @@ void Util::disown(QString &cmd, QStringList &arguments) {
     // Set output & error device to /dev/null
     qProcess.setStandardOutputFile(QProcess::nullDevice());
     qProcess.setStandardErrorFile(QProcess::nullDevice());
+    qProcess.setProgram(cmd);
     qProcess.setArguments(arguments);
-    QProcess::startDetached(cmd);
+    bool started = qProcess.startDetached();
+
+    if (!started) {
+        qDebug() << "Error starting process '" << cmd << "' with arguments" << arguments;
+    }
 }
 
 /**
@@ -170,25 +175,24 @@ QString Util::readRawFile(QString &inputFile) {
  * @param data
  * @param exportFile
  */
-void Util::saveFile(QString &data, QString &exportFile) {
-    createDir(exportFile);
-    QFileInfo fileInfo(data);
-    if (fileInfo.exists()) {
-        QFile file;
-        file.setFileName(Util::joinPath(exportFile, QStringList() << fileInfo.fileName()));
-        if (file.open(QFile::WriteOnly | QFile::Text)) {
-            // Read file contents
-            QString content = readRawFile(data);
-            // Write data to file
-            QTextStream out(&file);
-            out << content;
-            file.close();
-        } else {
-            std::string message = QString("Couldn't open the file '%1' for writing!").arg(fileInfo.absoluteFilePath()).toStdString();
-            throw AppException(message);
-        }
+void Util::saveFile(QString &data, QString &exportFile, bool mkDir) {
+    QFile file;
+    QFileInfo dataInfo(data);
+    if (mkDir) {
+        createDir(exportFile);
+        file.setFileName(Util::joinPath(exportFile, QStringList() << dataInfo.fileName()));
     } else {
-        std::string message = QString("Non-existent file '%1' provided!").arg(fileInfo.absoluteFilePath()).toStdString();
+        file.setFileName(exportFile);
+    }
+    if (file.open(QFile::WriteOnly | QFile::Text)) {
+        // Read file contents, maybe
+        QString content = (dataInfo.isFile() & mkDir) ? readRawFile(data) : data;
+        // Write data to file
+        QTextStream out(&file);
+        out << content;
+        file.close();
+    } else {
+        std::string message = QString("Couldn't open the file '%1' for writing!").arg(file.fileName()).toStdString();
         throw AppException(message);
     }
 }
@@ -231,6 +235,7 @@ void Util::pOpen(QString command, QStringList args) {
     process.setStandardOutputFile(QProcess::nullDevice());
     process.setStandardErrorFile(QProcess::nullDevice());
     process.setStandardInputFile(QProcess::nullDevice());
+    process.setProgram(command);
     process.setArguments(args);
     process.start();
 }
@@ -246,6 +251,7 @@ void Util::run(QString command, QStringList args) {
     process.setStandardOutputFile(QProcess::nullDevice());
     process.setStandardErrorFile(QProcess::nullDevice());
     process.setStandardInputFile(QProcess::nullDevice());
+    process.setProgram(command);
     process.setArguments(args);
     process.waitForFinished();
 }
@@ -261,7 +267,6 @@ QByteArray Util::checkOutput(QString command, QStringList arguments) {
     QProcess process;
     process.setStandardErrorFile(QProcess::nullDevice());
     process.setStandardInputFile(QProcess::nullDevice());
-    // process.setArguments(arguments);
     process.start(command, arguments);
     process.waitForFinished(-1);
 
@@ -336,15 +341,16 @@ QList<QString> Util::genericAdjust(QList<QString> colors, bool light) {
             color = c.darken(50);
         }
 
-        colors.replace(0,c0.darken(95));
+        colors.replace(0, c0.darken(95));
         colors.replace(7, c0.darken(75));
         colors.replace(8, c0.darken(25));
+        colors.replace(15, colors.at(7));
     } else {
         colors.replace(0, c0.darken(80));
         colors.replace(7, c0.darken(75));
         colors.replace(8, c0.darken(25));
+        colors.replace(15, colors.at(7));
     }
-    colors.replace(15, colors.at(7));
 
     return colors;
 }
@@ -357,26 +363,12 @@ QList<QString> Util::genericAdjust(QList<QString> colors, bool light) {
  * @return
  */
 QList<QString> Util::saturateColors(QList<QString> colors, int amount) {
-    QList<QString> result;
     QList<QString> newColors;
     if (amount & ((float) amount <= 1.0)) {
         newColors = Color::saturateMultiple(colors, amount);
     }
 
-    result.append(newColors.at(1));
-    result.append(newColors.at(2));
-    result.append(newColors.at(3));
-    result.append(newColors.at(4));
-    result.append(newColors.at(5));
-    result.append(newColors.at(6));
-    result.append(newColors.at(9));
-    result.append(newColors.at(10));
-    result.append(newColors.at(11));
-    result.append(newColors.at(12));
-    result.append(newColors.at(13));
-    result.append(newColors.at(14));
-
-    return result;
+    return newColors;
 }
 
 /**
@@ -392,7 +384,7 @@ QList<QString> Util::saturateColors(QList<QString> colors, int amount) {
 QList<QString> Util::cacheFileName(QString &img, QString &backend, bool light, QString &cacheDir, QString sat) {
     QString colorType = light ? "light" : "dark";
     QFileInfo file(img);
-    QString fileName = file.fileName().replace("/", "_").replace("\\", "_").replace(".", "_");
+    QString fileName = file.absoluteFilePath().replace("/", "_").replace("\\", "_").replace(".", "_");
     auto fileSize = file.size();
     QString cacheName = QString("%1_%2_%3_%4_%5_%6.json").arg(fileName).arg(colorType).arg(backend).arg(sat).arg(fileSize).arg(Setting::cacheVersion);
     QList<QString> result = {cacheDir, "schemes", cacheName};
@@ -456,20 +448,29 @@ QJsonObject Util::getColors(QString img, bool light, QString backend, QString ca
     QFileInfo cFile(cacheFile);
     QJsonObject cs;
     if (cFile.isFile()) {
-        // colors = theme.file(cfile.fileName());
-        // colors["alpha"] = util.Color.alpha_num
         qDebug() << "Found cached colorscheme.";
+        Theme th;
+        Color color;
+        cs = th.import(cFile.absoluteFilePath());
+        cs["alpha"] = color.alphaValue;
     } else {
         qDebug() << "Generating a colorscheme.";
         QString bEnd = getBackend(backend);
         qDebug() << QString("Using %1 backend.").arg(bEnd);
-        if (backend == "wal") {
-            QList<QString> colors = Wal::get(img, light);
-            qDebug() << colors;
+        if (bEnd == "wal") {
+            QList<QString> colorList = Wal::get(img, light);
             bool ok;
-            auto saturatedColors = Color::saturateMultiple(colors, QString(sat).toFloat(&ok));
-            cs = colorsToMap(saturatedColors, img);
-
+            QString saturation = sat.isEmpty() ? "0" : sat;
+            // Only saturate colors 1,2,3,4,5,6,9,10,11,12,13,14
+            for (int i = 0; i < colorList.size(); i++) {
+                if (i == 1 | i == 2 | i == 3 | i == 4 | i == 5 | i == 6 | i == 9 | i == 10 | i == 11 | i == 12 | i == 13 | i == 14){
+                    // Saturate color
+                    colorList.replace(i, Color::c_saturate(saturation.toFloat(&ok), colorList.at(i)));
+                }
+            }
+            qDebug() << "after saturation: " <<  colorList;
+            cs  = colorsToMap(colorList, img);
+            qDebug() << "w/o saturation: " << cs;
             Util util;
             QString fPath = cFile.absoluteFilePath();
             util.saveJSONFile(cs, fPath);

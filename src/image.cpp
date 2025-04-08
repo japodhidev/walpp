@@ -36,12 +36,12 @@ QString Image::getImage(QString &img, QString &cacheDir, bool iterative, bool re
         throw AppException(message);
     }
 
-    QString name = i.fileName();
-    QString path = Util::joinPath(cacheDir, QStringList() << name);
-    Util::saveFile(wallpaper, path);
+    QString path = Util::joinPath(cacheDir, QStringList() << "walpp");
+    // Cache the image file path.
+    Util::saveFile(wallpaper, path, false);
 
     QTextStream out(stdout);
-    out << "Using image \033[1;37m" << wallpaper << "\033[0m.";
+    out << "Using image \033[1;37m" << wallpaper << "\033[0m." << Qt::endl;
 
     return wallpaper;
 }
