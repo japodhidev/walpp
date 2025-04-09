@@ -15,7 +15,9 @@ public:
     static QByteArray readFile(QString &inputFile);
     static QJsonObject readJSONFile(QString &inputFile);
     static QString readRawFile(QString &inputFile);
+    static QList<QString> readRawFileToList(QString &inputFile);
     static void saveFile(QString &data, QString &exportFile, bool mkDir = true);
+    static void saveFileLines(QList<QString> &data, QString &exportFile, bool mkDir = true);
     static void saveJSONFile(QJsonObject &data, QString &exportFile);
     static void createDir(QString directory);
     void setupLogging();

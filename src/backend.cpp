@@ -1,5 +1,4 @@
 #include <utility>
-
 #include "../include/util.h"
 #include "../include/appexception.h"
 #include "../include/backend.h"
@@ -123,7 +122,6 @@ QList<QString> Wal::adjust(QList<QString> colors, bool light) {
         QString thirdColor = rawColors.at(15);
         rawColors.replace(15, Color::blendColor(thirdColor, secondColor));
     }
-    qDebug() << "adjust: " << rawColors;
     return rawColors;
 }
 

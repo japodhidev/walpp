@@ -170,6 +170,27 @@ QString Util::readRawFile(QString &inputFile) {
     }
 }
 
+QList<QString> Util::readRawFileToList(QString &inputFile) {
+    QFile qFile(inputFile);
+    QFileInfo fileInfo(inputFile);
+    if (qFile.exists()) {
+        if (qFile.open(QFile::ReadOnly | QFile::Text)) {
+            QTextStream in(&qFile);
+            QList<QString> content;
+            while(!in.atEnd()) {
+                content.append(in.readLine());
+            }
+            qFile.close();
+            return content;
+        }
+        std::string message = QString("Couldn't open the file '%1'  for reading!").arg(fileInfo.absoluteFilePath()).toStdString();
+        throw AppException(message);
+    } else {
+        std::string message = "Non-existent file requested!";
+        throw AppException(message);
+    }
+}
+
 /**
  * Write data to a file.
  * @param data
@@ -190,6 +211,33 @@ void Util::saveFile(QString &data, QString &exportFile, bool mkDir) {
         // Write data to file
         QTextStream out(&file);
         out << content;
+        file.close();
+    } else {
+        std::string message = QString("Couldn't open the file '%1' for writing!").arg(file.fileName()).toStdString();
+        throw AppException(message);
+    }
+}
+
+/**
+ * Write data to a file, line by line.
+ * @param data
+ * @param exportFile
+ */
+void Util::saveFileLines(QList<QString> &data, QString &exportFile, bool mkDir) {
+    QFile file;
+    QFileInfo fileInfo(exportFile);
+    if (mkDir) {
+        createDir(fileInfo.absolutePath());
+        file.setFileName(Util::joinPath(exportFile, QStringList() << fileInfo.fileName()));
+    } else {
+        file.setFileName(exportFile);
+    }
+    if (file.open(QFile::WriteOnly | QFile::Text)) {
+        // Write data to file
+        QTextStream out(&file);
+        foreach (const QString &entry, data) {
+            out << entry << Qt::endl;
+        }
         file.close();
     } else {
         std::string message = QString("Couldn't open the file '%1' for writing!").arg(file.fileName()).toStdString();
@@ -452,7 +500,8 @@ QJsonObject Util::getColors(QString img, bool light, QString backend, QString ca
         Theme th;
         Color color;
         cs = th.import(cFile.absoluteFilePath());
-        cs["alpha"] = color.alphaValue;
+        auto alpha = QJsonValue(color.alphaValue);
+        auto csIter = cs.insert("alpha",  alpha);
     } else {
         qDebug() << "Generating a colorscheme.";
         QString bEnd = getBackend(backend);
@@ -468,9 +517,7 @@ QJsonObject Util::getColors(QString img, bool light, QString backend, QString ca
                     colorList.replace(i, Color::c_saturate(saturation.toFloat(&ok), colorList.at(i)));
                 }
             }
-            qDebug() << "after saturation: " <<  colorList;
             cs  = colorsToMap(colorList, img);
-            qDebug() << "w/o saturation: " << cs;
             Util util;
             QString fPath = cFile.absoluteFilePath();
             util.saveJSONFile(cs, fPath);

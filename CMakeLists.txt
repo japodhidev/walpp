@@ -17,8 +17,10 @@ qt_add_executable(walpp
         include/types.h
         src/settings.cpp
         include/reload.h src/reload.cpp
-        include/backend.h
-        src/backend.cpp include/theme.h src/theme.cpp)
+        include/backend.h src/backend.cpp
+        include/theme.h src/theme.cpp
+        include/export.h src/export.cpp
+        )
 
 target_link_libraries(walpp
     PRIVATE

@@ -22,7 +22,7 @@ Color::Color(QString &color) {
  * @return
  */
 QString Color::rgb() const {
-    return QString("rgb(%1,%2,%3)")
+    return QString("%1,%2,%3")
         .arg(this->walColor.red())
         .arg(this->walColor.green())
         .arg(this->walColor.blue())
@@ -334,4 +334,37 @@ QString Color::c_saturate(float amount, QString color) {
     QColor hslColour = QColor::fromHslF(colour.hueF(), saturation, colour.lightnessF());
 
     return hslColour.name(QColor::HexRgb);
+}
+
+
+/**
+ * Lighten a hex color
+ * @param  amount [description]
+ * @param  color  [description]
+ * @return        [description]
+ */
+QString Color::c_lighten(float amount, QString color) {
+    QColor colour = validateColorStr(color);
+    float red = colour.redF() + (255 - colour.redF()) * amount;
+    float green = colour.greenF() + (255 - colour.greenF()) * amount;
+    float blue = colour.blueF() + (255 - colour.blueF()) * amount;
+
+    QColor c(red, green, blue);
+    return c.name(QColor::HexRgb);
+}
+
+/**
+ * Darken a hex color
+ * @param  amount [description]
+ * @param  color  [description]
+ * @return        [description]
+ */
+QString Color::c_darken(float amount, QString color) {
+    QColor colour = validateColorStr(color);
+    float red = colour.redF() * (1 - amount);
+    float green = colour.greenF() * (1 - amount);
+    float blue = colour.blueF() * (1 - amount);
+
+    QColor c(red, green, blue);
+    return c.name(QColor::HexRgb);
 }

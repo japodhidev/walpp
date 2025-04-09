@@ -4,6 +4,7 @@
 #include <QCommandLineOption>
 #include <QTextStream>
 #include "../include/color.h"
+#include "../include/export.h"
 #include "../include/image.h"
 #include "../include/reload.h"
 #include "../include/sequences.h"
@@ -290,7 +291,8 @@ void parseArgs(QCommandLineParser &parser) {
     // TODO: if sys.stdout.isatty():
     Util::palette();
 
-    // TODO: export.every(colors_plain)
+    // Export::exportSingle(plainColors, "konsole");
+    Export::exportAll(plainColors);
 
     if (parser.isSet("t")) {
         Reload::env(!parser.isSet("t"));
@@ -304,6 +306,8 @@ void parseArgs(QCommandLineParser &parser) {
     }
 
     if (!parser.isSet("e")) {
-        Reload::gtk();
+        // Reload::gtk();
     }
+    // Gracefully exit.
+    std::exit(EXIT_SUCCESS);
 }
