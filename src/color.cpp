@@ -1,7 +1,8 @@
+#include <string>
+#include <algorithm>
 #include "../include/color.h"
 #include "../include/appexception.h"
 #include <QDebug>
-#include <string>
 #include <QIODevice>
 #include <QtGui/QColor>
 
@@ -159,15 +160,19 @@ QString Color::blue() const {
  * Lighten color by percent.
  * @return
  */
-QString Color::lighten(int percent, QString color) const {
-    int per100 = percent + 100;
+QString Color::lighten(float amount, QString color) const {
+    if (amount > 1.0 | amount < 0) {
+        std::string message = QString("Invalid amount: '%1' provided. Amount should be a value between 0-1.0").arg(amount).toStdString();
+        throw AppException(message);
+    }
+    float per100 = (amount * 100) + 100;
     QColor lighterColor;
 
     if (color.isEmpty()) {
         lighterColor = this->walColor.lighter(per100);
     } else {
         QColor c = validateColorStr(color);
-        lighterColor = c.darker(per100);
+        lighterColor = c.lighter(per100);
     }
 
     return lighterColor.name(QColor::HexRgb);
@@ -177,8 +182,12 @@ QString Color::lighten(int percent, QString color) const {
  * Darken color by percent.
  * @return
  */
-QString Color::darken(int percent, QString color) const {
-    int per100 = (percent * 10) + 100;
+QString Color::darken(float amount, QString color) const {
+    if (amount > 1.0 | amount < 0) {
+        std::string message = QString("Invalid amount: '%1' provided. Amount should be a value between 0-1.0").arg(amount).toStdString();
+        throw AppException(message);
+    }
+    float per100 = amount * 1000;
     QColor darkerColor;
 
     if (color.isEmpty()) {
@@ -195,8 +204,12 @@ QString Color::darken(int percent, QString color) const {
  * Saturate a color.
  * @return
  */
-QString Color::saturate(int percent, QString color) const {
-    double per100 = (double) percent / 100;
+QString Color::saturate(float amount, QString color) const {
+    if (amount > 1.0 | amount < 0) {
+        std::string message = QString("Invalid amount: '%1' provided. Amount should be a value between 0-1.0").arg(amount).toStdString();
+        throw AppException(message);
+    }
+    // float per100 = amount * 100;
     hls_t hls{};
     if (color.isEmpty()) {
         hls.hue_t = this->walColor.hslHueF();
@@ -206,7 +219,7 @@ QString Color::saturate(int percent, QString color) const {
         hls.hue_t = c.hslHueF();
         hls.luminance_t = c.lightnessF();
     }
-    hls.saturation_t = (float)per100;
+    hls.saturation_t = amount;
 
     QColor newRgbColors = QColor::fromHslF(hls.hue_t, hls.saturation_t, hls.luminance_t);
 
@@ -221,7 +234,7 @@ QString Color::saturate(int percent, QString color) const {
 QString Color::hexToXRgba() const {
     QString qStr = this->walColor.name(QColor::HexRgb);
     if (qStr.size() != 7) {
-        std::string message = "Invalid HEX color string provided! Length mismatch.";
+        std::string message = QString("Invalid HEX color string: '%1' provided! Length mismatch.").arg(qStr).toStdString();
         throw AppException(message);
     }
 
@@ -330,7 +343,7 @@ QList<QString> Color::saturateMultiple(QList<QString> &colors, float amount) {
  */
 QString Color::c_saturate(float amount, QString color) {
     QColor colour = validateColorStr(color);
-    float saturation = colour.saturationF() * (1 + amount);
+    float saturation = std::min(colour.saturationF() * (1 + amount), 1.0f);
     QColor hslColour = QColor::fromHslF(colour.hueF(), saturation, colour.lightnessF());
 
     return hslColour.name(QColor::HexRgb);

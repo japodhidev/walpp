@@ -290,7 +290,7 @@ void parseArgs(QCommandLineParser &parser) {
         th.save(plainColors, parser.value("saveTheme"), l);
     }
 
-    Sequences::send(plainColors, Setting::CACHE_DIR, false, true);
+    Sequences::send(plainColors, Setting::CACHE_DIR, true, true);
 
     // TODO: if sys.stdout.isatty():
     Util::palette();

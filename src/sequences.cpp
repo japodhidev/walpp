@@ -2,8 +2,10 @@
 #include "../include/sequences.h"
 #include "../include/util.h"
 #include <QDir>
+#include <QDirIterator>
 #include <QRegularExpression>
 #include <QFileInfoList>
+#include <QDirListing>
 
 Sequences::Sequences() = default;
 
@@ -15,13 +17,6 @@ Sequences::Sequences() = default;
  * @param vteFix   [description]
  */
 void Sequences::send(QJsonObject colors, QString cacheDir, bool toSend, bool vteFix) {
-    QString ttyPattern;
-    if (Setting::OS.toLower() == "darwin") {
-        ttyPattern = "/dev/ttys00[0-9]*";
-    } else {
-        ttyPattern = "/dev/pts/[0-9]*";
-    }
-
     auto sequences = createSequences(colors, vteFix);
 
     // Writing to "/dev/pts/[0-9] lets you send data to open terminals.
@@ -30,7 +25,7 @@ void Sequences::send(QJsonObject colors, QString cacheDir, bool toSend, bool vte
         QList<QString> terminals = findTerminals();
 
         foreach (QString terminal, terminals) {
-            Util::saveFile(sequences, terminal);
+            Util::saveFile(sequences, terminal, false);
         }
     }
     QString seqPath = Util::joinPath(cacheDir, QStringList() << "sequences");
@@ -127,19 +122,27 @@ QString Sequences::createSequences(QJsonObject colors, bool vteFix) {
 }
 
 QList<QString> Sequences::findTerminals() {
-    QDir dir("/dev");
-    QStringList terminalPatterns = {"/dev/pts/[0-9]*", "/dev/ttys00[0-9]*"};
+    QDirIterator iter("/dev", QDirIterator::Subdirectories);
+    QString ttyDirPattern;
     QRegularExpression regex;
     QList<QString> terminals;
 
-    for (const QString &pattern : terminalPatterns) {
-        regex.setPattern(QRegularExpression::escape(pattern));
-        QFileInfoList files = dir.entryInfoList(QDir::Files);
+    if (Setting::OS.toLower() == "darwin") {
+        ttyDirPattern = "/dev/ttys00[0-9]*";
+    } else {
+        ttyDirPattern = "/dev/pts/[0-9]+";
+    };
 
-        foreach (const QFileInfo &fileInfo, files) {
-            if (regex.match(fileInfo.fileName()).hasMatch()) {
-                terminals.append(fileInfo.fileName());
-            }
+    regex.setPattern(ttyDirPattern);
+
+    QString devDir = "/dev";
+    using ItFlag = QDirListing::IteratorFlag;
+    for (const auto &dirEntry : QDirListing(devDir, ItFlag::Recursive)) {
+        QString path = dirEntry.filePath();
+        auto match = regex.match(path);
+
+        if (match.hasMatch()) {
+            terminals.append(match.captured(0));
         }
     }
 

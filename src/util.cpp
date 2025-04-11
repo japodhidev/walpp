@@ -413,18 +413,18 @@ QList<QString> Util::genericAdjust(QList<QString> colors, bool light) {
     if (light) {
         foreach (QString color, colors) {
             Color c(color);
-            color = c.saturate(60);
-            color = c.darken(50);
+            color = c.saturate(0.6);
+            color = c.darken(0.5);
         }
 
-        colors.replace(0, c0.darken(95));
-        colors.replace(7, c0.darken(75));
-        colors.replace(8, c0.darken(25));
+        colors.replace(0, c0.darken(0.95));
+        colors.replace(7, c0.darken(0.75));
+        colors.replace(8, c0.darken(0.25));
         colors.replace(15, colors.at(7));
     } else {
-        colors.replace(0, c0.darken(80));
-        colors.replace(7, c0.darken(75));
-        colors.replace(8, c0.darken(25));
+        colors.replace(0, c0.darken(0.80));
+        colors.replace(7, c0.darken(0.75));
+        colors.replace(8, c0.darken(0.25));
         colors.replace(15, colors.at(7));
     }
 

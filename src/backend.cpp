@@ -53,8 +53,9 @@ QList<QString> Wal::generateColors(QString &img) {
             std::string message = "Imagemagick couldn't generate a suitable palette.";
             throw AppException(message);
         } else {
+            int count = 16 + i;
             qDebug() << "Imagemagick couldn't generate a palette.";
-            qDebug() << QString("Trying a larger palette size %1").arg(16 + i);
+            qDebug() << QString("Trying a larger palette size %1").arg(count);
         }
     }
 
@@ -105,19 +106,19 @@ QList<QString> Wal::adjust(QList<QString> colors, bool light) {
         foreach (QString entry, rawColors) {
             entry = Color::c_saturate(0.5, entry);
         }
-        rawColors.replace(0, color_o.lighten(85, colors.last()));
+        rawColors.replace(0, color_o.lighten(0.85, colors.last()));
         rawColors.replace(7, colors.at(0));
-        rawColors.replace(8,color_o.darken(40, colors.last()));
+        rawColors.replace(8,color_o.darken(0.4, colors.last()));
         rawColors.replace(15, colors.at(0));
     } else {
         // Darken the color slightly.
         if (!rawColors.at(1).startsWith("0")) {
-            rawColors.replace(0, color_o.darken(40, rawColors.at(0)));
+            rawColors.replace(0, color_o.darken(0.4, rawColors.at(0)));
         }
         QString firstColor = rawColors.at(7);
         QString secondColor = "#EEEEEE";
         rawColors.replace(7, Color::blendColor(firstColor, secondColor));
-        rawColors.replace(8, color_o.darken(30, rawColors.at(7)));
+        rawColors.replace(8, color_o.darken(0.33, rawColors.at(7)));
         QString thirdColor = rawColors.at(15);
         rawColors.replace(15, Color::blendColor(thirdColor, secondColor));
     }
