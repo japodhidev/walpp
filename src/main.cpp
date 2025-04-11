@@ -196,9 +196,9 @@ void parseExitingArgs(QCommandLineParser &parser) {
     }
 
     if (parser.isSet("c")) {
-        qDebug() << "delete cached schemes";
         QString schemeDir = Util::joinPath(Setting::CACHE_DIR, QStringList() << "schemes");
-        qDebug() << QString("TODO: Remove %1 directory.").arg(schemeDir);
+        Util::removeDirFiles(schemeDir);
+        std::exit(EXIT_SUCCESS);
     }
 
     if (!parser.isSet("directory") & !parser.isSet("theme") & !parser.isSet("w") & !parser.isSet("backend")) {
@@ -249,6 +249,8 @@ void parseArgs(QCommandLineParser &parser) {
         imageFile = img_o.getImage(img, const_cast<QString &>(Setting::CACHE_DIR), it, recurse);
         QString bEnd = parser.isSet("backend") ? parser.value("backend") : "wal";
         plainColors = util.getColors(imageFile, l, bEnd, Setting::CACHE_DIR, saturation);
+        // Insert alpha value provided
+        plainColors.insert("alpha", color.alphaValue);
     }
 
     if (parser.isSet("theme")) {
@@ -264,6 +266,8 @@ void parseArgs(QCommandLineParser &parser) {
         auto cachedWallpaper = Util::readFile(wallPath);
         QString walStr = QString(cachedWallpaper.at(0));
         plainColors = util.getColors(walStr, l, parser.value("backend"), saturation);
+        // Insert alpha value provided
+        plainColors.insert("alpha", color.alphaValue);
     }
 
     if (parser.isSet("background")) {

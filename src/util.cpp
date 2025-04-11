@@ -89,7 +89,34 @@ void Util::createDir(QString directory) {
     // bool success = dir.mkdir(directory);
     bool success = dir.mkpath(directory);
     if (!success) {
-        std::string message = QString("Couldn't create the directory '%1'!").arg(directory).toStdString();
+        std::string message = QString("Couldn't create the directory: '%1'!").arg(directory).toStdString();
+        throw AppException(message);
+    }
+}
+
+/**
+ * Delete files
+ * @param directory [description]
+ */
+void Util::removeDirFiles(QString directory) {
+    QFileInfo dInfo(directory);
+    if (dInfo.exists()) {
+        Logging::info(QString("Deleting: %1").arg(dInfo.absoluteFilePath()));
+        if (dInfo.isDir()) {
+            // Delete files from directory
+            QDir d(dInfo.absoluteFilePath());
+            if (!d.removeRecursively()) {
+                Logging::error(QString("Couldn't remove the directory '%1'.").arg(d.absolutePath()));
+            }
+        } else {
+            // Delete file
+            QFile f(dInfo.absoluteFilePath());
+            if (!f.remove()) {
+                Logging::error(QString("Couldn't remove the file '%1'.").arg(dInfo.absoluteFilePath()));
+            }
+        }
+    } else {
+        std::string message = QString("Non-existent directory provided: '%1'!").arg(directory).toStdString();
         throw AppException(message);
     }
 }
@@ -502,7 +529,7 @@ QJsonObject Util::getColors(QString img, bool light, QString backend, QString ca
         Color color;
         cs = th.import(cFile.absoluteFilePath());
         auto alpha = QJsonValue(color.alphaValue);
-        auto csIter = cs.insert("alpha",  alpha);
+        cs.insert("alpha",  alpha);
     } else {
         Logging::info("Generating a colorscheme.");
         QString bEnd = getBackend(backend);

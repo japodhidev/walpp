@@ -20,6 +20,7 @@ public:
     static void saveFileLines(QList<QString> &data, QString &exportFile, bool mkDir = true);
     static void saveJSONFile(QJsonObject &data, QString &exportFile);
     static void createDir(QString directory);
+    static void removeDirFiles(QString directory);
     void setupLogging();
     static QString joinPath(QString oPath, QStringList addition);
     static QString which(QString program);

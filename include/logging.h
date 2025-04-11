@@ -7,6 +7,7 @@
 class Logging {
 public:
     static void info(QString message);
+    static void error(QString message);
 };
 
 #endif //WALPP_LOGGING_H
