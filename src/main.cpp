@@ -294,7 +294,7 @@ void parseArgs(QCommandLineParser &parser) {
     // Export::exportSingle(plainColors, "konsole");
     Export::exportAll(plainColors);
 
-    if (parser.isSet("t")) {
+    if (!parser.isSet("e")) {
         Reload::env(!parser.isSet("t"));
     }
 
@@ -306,7 +306,7 @@ void parseArgs(QCommandLineParser &parser) {
     }
 
     if (!parser.isSet("e")) {
-        // Reload::gtk();
+        // TODO: reload::gtk();
     }
     // Gracefully exit.
     std::exit(EXIT_SUCCESS);

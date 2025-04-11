@@ -1,5 +1,5 @@
+#include "../include/logging.h"
 #include "../include/sequences.h"
-#include "../include/settings.h"
 #include "../include/util.h"
 #include <QDir>
 #include <QRegularExpression>
@@ -35,7 +35,7 @@ void Sequences::send(QJsonObject colors, QString cacheDir, bool toSend, bool vte
     }
     QString seqPath = Util::joinPath(cacheDir, QStringList() << "sequences");
     Util::saveFile(sequences, seqPath, false);
-    qDebug() << "Set terminal colors";
+    Logging::info("Set terminal colors");
 }
 
 /**

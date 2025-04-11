@@ -1,6 +1,7 @@
 #include "../include/appexception.h"
 #include "../include/backend.h"
 #include "../include/color.h"
+#include "../include/logging.h"
 #include "../include/settings.h"
 #include "../include/theme.h"
 #include <QFile>
@@ -491,12 +492,13 @@ void Util::palette() {
  * @param cacheDir
  */
 QJsonObject Util::getColors(QString img, bool light, QString backend, QString cacheDir,  QString sat) {
+    QTextStream out(stdout);
     QList<QString> cacheName = cacheFileName(img, backend, light, cacheDir, sat);
     QString cacheFile = joinPath(cacheName.at(0), QStringList() << cacheName.at(1) << cacheName.at(2));
     QFileInfo cFile(cacheFile);
     QJsonObject cs;
     if (cFile.isFile()) {
-        qDebug() << "Found cached colorscheme.";
+        Logging::info("Found cached colorscheme.");
         Theme th;
         Color color;
         cs = th.import(cFile.absoluteFilePath());
@@ -521,7 +523,7 @@ QJsonObject Util::getColors(QString img, bool light, QString backend, QString ca
             Util util;
             QString fPath = cFile.absoluteFilePath();
             util.saveJSONFile(cs, fPath);
-            qDebug() << "Generation complete.";
+            Logging::info("Generation complete.");
         } else {
             qDebug() << QString("Unsupported backend - %1").arg(backend);
         }

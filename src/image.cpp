@@ -1,5 +1,6 @@
-#include "../include/image.h"
 #include "../include/appexception.h"
+#include "../include/image.h"
+#include "../include/logging.h"
 #include "../include/util.h"
 #include <QDir>
 #include <QDirIterator>
@@ -40,8 +41,8 @@ QString Image::getImage(QString &img, QString &cacheDir, bool iterative, bool re
     // Cache the image file path.
     Util::saveFile(wallpaper, path, false);
 
-    QTextStream out(stdout);
-    out << "Using image \033[1;37m" << wallpaper << "\033[0m." << Qt::endl;
+    QString logMessage = QString("Using image \033[1;37m%1\033[0m.").arg(i.fileName());
+    Logging::info(logMessage);
 
     return wallpaper;
 }

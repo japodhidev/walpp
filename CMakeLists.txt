@@ -20,7 +20,7 @@ qt_add_executable(walpp
         include/backend.h src/backend.cpp
         include/theme.h src/theme.cpp
         include/export.h src/export.cpp
-        )
+        include/logging.h src/logging.cpp)
 
 target_link_libraries(walpp
     PRIVATE

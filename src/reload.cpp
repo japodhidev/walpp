@@ -1,9 +1,7 @@
+#include "../include/logging.h"
 #include "../include/reload.h"
 #include "../include/util.h"
-#include "../include/settings.h"
-#include <QProcessEnvironment>
 #include <QProcess>
-#include <utility>
 
 Reload::Reload() = default;
 
@@ -121,5 +119,6 @@ void Reload::env(bool ttyReload) {
     kitty();
     sway();
     polybar();
+    Logging::info("Reloaded environment.");
     tty(ttyReload);
 }

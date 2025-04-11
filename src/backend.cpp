@@ -74,7 +74,6 @@ QList<QString> Wal::generateColors(QString &img) {
     } else {
         qDebug() << "There was an error parsing the output from Imagemagick!";
     }
-    qDebug() << "generate: " << colorList;
     return colorList;
 }
 

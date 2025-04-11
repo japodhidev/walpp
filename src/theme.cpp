@@ -1,8 +1,9 @@
 #include <QJsonArray>
 #include <QDir>
-#include "../include/theme.h"
-#include "../include/color.h"
 #include "../include/appexception.h"
+#include "../include/color.h"
+#include "../include/logging.h"
+#include "../include/theme.h"
 
 Theme::Theme() = default;
 
@@ -57,10 +58,10 @@ QJsonObject Theme::import(QString inputFile, bool light) {
     }
 
     // Parse the theme file
-    QTextStream out(stdout);
     QFileInfo t_info(themeFile);
     if (t_info.exists() & t_info.isFile()) {
-        out << QString("Set theme to \033[1;37m%1\033[0m.").arg(t_info.fileName()) << Qt::endl;
+        QString logMsg = QString("Set theme to \033[1;37m%1\033[0m.").arg(t_info.fileName());
+        Logging::info(logMsg);
         QString fileName = t_info.absoluteFilePath();
         QString path = Util::joinPath(Setting::CACHE_DIR, QStringList() << "last_used_theme");
         Util::saveFile(fileName, path);

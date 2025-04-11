@@ -1,4 +1,5 @@
 #include "../include/export.h"
+#include "../include/logging.h"
 
 Export::Export() = default;
 
@@ -36,9 +37,8 @@ void Export::exportAll(QJsonObject colors, QString outputDir) {
         }
     }
 
-    QTextStream out(stdout);
-    out << "Exported all files" << Qt::endl;
-    out << "Exported all user files" << Qt::endl;
+    Logging::info("Exported all files");
+    Logging::info("Exported all user files");
 }
 
 /**
@@ -57,7 +57,7 @@ void Export::exportSingle(QJsonObject colors, QString exportType, QString output
 	QTextStream out(stdout);
 	if (tFile.isFile()) {
 		parseTemplate(mColors, templateFile, oFile);
-		out << "Exported " << exportType << Qt::endl;
+        Logging::info(QString("Exported %1").arg(exportType));
 	} else {
 		out << "Template '" << exportType << "' doesn't exist." << Qt::endl;
 	}
