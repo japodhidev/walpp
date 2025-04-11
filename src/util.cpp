@@ -464,14 +464,13 @@ QString Util::getBackend(QString &backend) {
  */
 void Util::palette() {
     QTextStream ts(stdout);
-    for (int i = 0; i <= 16; i++) {
+    for (int i = 0; i < 16; i++) {
         QString str_i;
-        int mod_i = i % 8;
-        if (mod_i == 0) {
+        if (i % 8 == 0) {
             ts << Qt::endl;
         }
 
-        if (mod_i > 7) {
+        if (i > 7) {
             str_i = QString("8;5;%1").arg(i);
         } else {
             str_i = QString("%1").arg(i);
@@ -480,7 +479,7 @@ void Util::palette() {
         QString spaces = QString(" ").repeated(80 / 20);
         ts << QString("\033[4%1m%2\033[0m").arg(str_i, spaces);
     }
-    ts << Qt::endl;
+    ts << Qt::endl << Qt::endl;
 }
 
 /**
@@ -505,9 +504,9 @@ QJsonObject Util::getColors(QString img, bool light, QString backend, QString ca
         auto alpha = QJsonValue(color.alphaValue);
         auto csIter = cs.insert("alpha",  alpha);
     } else {
-        qDebug() << "Generating a colorscheme.";
+        Logging::info("Generating a colorscheme.");
         QString bEnd = getBackend(backend);
-        qDebug() << QString("Using %1 backend.").arg(bEnd);
+        Logging::info(QString("Using %1 backend.").arg(bEnd));
         if (bEnd == "wal") {
             QList<QString> colorList = Wal::get(img, light);
             bool ok;
