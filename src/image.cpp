@@ -40,7 +40,7 @@ QString Image::getImage(QString &img, QString &cacheDir, bool iterative, bool re
     // Cache the image file path.
     Util::saveFile(wallpaper, path, false);
 
-    QString logMessage = QString("Using image \033[1;37m%1\033[0m.").arg(i.fileName());
+    QString logMessage = QString("Using image \033[1;37m%1\033[0m.").arg(wallpaper);
     Logging::info(logMessage);
 
     return wallpaper;
@@ -57,8 +57,8 @@ QStringList Image::getImagesRecursively()
     QDirIterator dirIt(imgDir.absoluteFilePath(), QDirIterator::Subdirectories);
     while (dirIt.hasNext()) {
         QFileInfo f(dirIt.nextFileInfo());
-        QString fileName = f.fileName();
-        if (endsWithOneOf(fileName, fileTypes)) {
+        QString suffix = f.suffix();
+        if (fileTypes.contains(suffix, Qt::CaseInsensitive)) {
             images.append(f.absoluteFilePath());
         }
     }
@@ -82,8 +82,8 @@ QStringList Image::getAllImages()
     }
 
     foreach (const auto &entry, wallPath.dir().entryInfoList()) {
-        QString baseName = entry.baseName();
-        if (endsWithOneOf(baseName, fileTypes)) {
+        QString suffix = entry.suffix();
+        if (fileTypes.contains(suffix, Qt::CaseInsensitive)) {
             images.append(entry.absoluteFilePath());
         }
     }
@@ -111,8 +111,8 @@ QString Image::getRandomImage(bool recursive)
     }
 
     // Pick a random image. Maybe similar to Python's random.shuffle()
-    QRandomGenerator prng(nullptr, images.size());
-    return images.at(prng.generate());
+    auto rdx = QRandomGenerator::global()->bounded(0, images.size());
+    return images.at(rdx);
 }
 
 /**
@@ -147,20 +147,4 @@ QString Image::getNextImage(bool recursive)
                Util::joinPath(imgDir.absolutePath(), QStringList() << wallpaper) :
                Util::joinPath(imgDir.absolutePath(), QStringList() << "");
 }
-
-bool Image::endsWithOneOf(QString &eStr, QStringList &items)
-{
-    QString t_table;
-    foreach (const auto &entry, items) {
-        bool hasValue = eStr.toLower().contains(entry);
-        if (hasValue) {
-            t_table.append("t");
-        } else {
-            t_table.append("f");
-        }
-    }
-
-    return t_table.contains("t");
-}
-
 

@@ -31,10 +31,12 @@ QJsonObject Theme::import(QString &inputFile, bool light) {
     QString lightDir = Util::joinPath(Setting::CONF_DIR, QStringList() << "colorschemes" << "light");
     QString darkDir = Util::joinPath(Setting::CONF_DIR, QStringList() << "colorschemes" << "dark");
     QString darkDirModules = Util::joinPath(Setting::MODULE_DIR, QStringList() << "colorschemes" << "dark");
+    QString lightDirModules = Util::joinPath(Setting::MODULE_DIR, QStringList() << "colorschemes" << "light");
     Util::createDir(lightDir);
     Util::createDir(darkDir);
-    // Create module directory
+    // Create module theme directories
     Util::createDir(darkDirModules);
+    Util::createDir(lightDirModules);
 
     QString themeFile;
 
@@ -55,7 +57,9 @@ QJsonObject Theme::import(QString &inputFile, bool light) {
         QFileInfo i_info(inputFile);
         if (ut_info.exists() & ut_info.isFile()) {
             themeFile = ut_info.absoluteFilePath();
-        } else if (i_info.exists() & i_info.isFile()) {
+        }
+
+        if (i_info.exists() & i_info.isFile()) {
             themeFile = i_info.absoluteFilePath();
         }
     }
@@ -67,7 +71,7 @@ QJsonObject Theme::import(QString &inputFile, bool light) {
         Logging::info(logMsg);
         QString fileName = t_info.absoluteFilePath();
         QString path = Util::joinPath(Setting::CACHE_DIR, QStringList() << "last_used_theme");
-        Util::saveFile(fileName, path);
+        Util::saveFile(fileName, path, false);
 
         QString themePath = t_info.absoluteFilePath();
         return parse(themePath);
@@ -127,10 +131,9 @@ QJsonObject Theme::parse(QString &themeFile) {
  * @return
  */
 QList<QString> Theme::listUserThemes() {
-    QString dark_dir  = Util::joinPath(Setting::CONF_DIR, QStringList() << "colorschemes" << "dark");
-    QString light_dir = Util::joinPath(Setting::CONF_DIR, QStringList() << "colorschemes" << "light");
+    QString themeDir  = Util::joinPath(Setting::CONF_DIR, QStringList() << "colorschemes");
 
-    QList<QString> themes = listUtil(dark_dir, true) + listUtil(light_dir, false);
+    QList<QString> themes = listUtil(themeDir, true) + listUtil(themeDir, false);
 
     return themes;
 }
@@ -141,8 +144,7 @@ QList<QString> Theme::listUserThemes() {
  * @return
  */
 QList<QString> Theme::listThemes(bool mode) {
-    QString themeMode = mode ? "dark" : "light";
-    QString themeDir  = Util::joinPath(Setting::MODULE_DIR, QStringList() << "colorschemes" << themeMode);
+    QString themeDir  = Util::joinPath(Setting::MODULE_DIR, QStringList() << "colorschemes");
 
     return listUtil(themeDir, mode);
 }
@@ -252,7 +254,7 @@ void Theme::listAllThemes() {
  */
 QList<QString> Theme::listUtil(QString &dirName, bool mode) {
     QString themeMode = mode ? "dark" : "light";
-    QFileInfo themeDir(Util::joinPath(dirName, QStringList() << "colorschemes" << themeMode));
+    QFileInfo themeDir(Util::joinPath(dirName, QStringList() << themeMode));
 
     if (!themeDir.exists() & !themeDir.isDir()) {
         std::string message = QString("%1 isn't a valid directory!").arg(themeDir.absolutePath()).toStdString();
