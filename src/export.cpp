@@ -8,7 +8,7 @@ Export::Export() = default;
  * @param colors    [description]
  * @param outputDir [description]
  */
-void Export::exportAll(QJsonObject colors, QString outputDir) {
+void Export::exportAll(QJsonObject &colors, const QString& outputDir) {
 	QMap<QString, QString> mColors = flattenColors(colors);
 	QString templateDir = Util::joinPath(Setting::MODULE_DIR, QStringList() << "templates");
 	QString templateDirUser = Util::joinPath(Setting::CONF_DIR, QStringList() << "templates");
@@ -23,7 +23,8 @@ void Export::exportAll(QJsonObject colors, QString outputDir) {
 	    QString fileName = f.fileName();
 	    if (fileName != ".DS_Store" & !fileName.endsWith(".swp")) {
 	    	QString path = Util::joinPath(outputDir, QStringList() << fileName);
-            parseTemplate(mColors, f.absoluteFilePath(), path);
+            QString inputFile = f.absoluteFilePath();
+            parseTemplate(mColors, inputFile, path);
 	    }
     }
 
@@ -33,7 +34,8 @@ void Export::exportAll(QJsonObject colors, QString outputDir) {
         QString fileName = f.fileName();
         if (fileName != ".DS_Store" & !fileName.endsWith(".swp")) {
             QString path = Util::joinPath(outputDir, QStringList() << fileName);
-            parseTemplate(mColors, f.absoluteFilePath(), path);
+            QString inputFile = f.absoluteFilePath();
+            parseTemplate(mColors, inputFile, path);
         }
     }
 
@@ -47,7 +49,7 @@ void Export::exportAll(QJsonObject colors, QString outputDir) {
  * @param exportType [description]
  * @param outputFile [description]
  */
-void Export::exportSingle(QJsonObject colors, QString exportType, QString outputFile) {
+void Export::exportSingle(QJsonObject &colors, QString &exportType, const QString& outputFile) {
 	QMap<QString, QString> mColors = flattenColors(colors);
 	QString templateName = getExportType(exportType);
 	QString templateFile = Util::joinPath(Setting::MODULE_DIR, QStringList() << "templates" << templateName);
@@ -66,7 +68,7 @@ void Export::exportSingle(QJsonObject colors, QString exportType, QString output
 /**
  * Prepare colors to be exported. Flatten dicts and convert colors to util.Color()
  */
-QMap<QString, QString> Export::flattenColors(QJsonObject colors) {
+QMap<QString, QString> Export::flattenColors(QJsonObject &colors) {
 	QMap<QString, QString> allColors, result;
     QString alpha = colors.value("alpha").toString().isNull() ? QString("%1").arg(colors.value("alpha").toDouble()) : "99";
 	allColors.insert("wallpaper", colors.value("wallpaper").toString());
@@ -102,7 +104,7 @@ QMap<QString, QString> Export::flattenColors(QJsonObject colors) {
  * @param inputFile  [description]
  * @param outputFile [description]
  */
-void Export::parseTemplate(QMap<QString, QString> colors, QString inputFile, QString outputFile) {
+void Export::parseTemplate(QMap<QString, QString> &colors, QString &inputFile, QString outputFile) {
 	QList<QString> templateData = Util::readRawFileToList(inputFile);
     QList<QString> newData;
 	QHash<QString, std::function<QString(Color)>> functions;
@@ -172,7 +174,7 @@ void Export::parseTemplate(QMap<QString, QString> colors, QString inputFile, QSt
  * @param  expType [description]
  * @return         [description]
  */
-QString Export::getExportType(QString expType) {
+QString Export::getExportType(QString &expType) {
 	QMap<QString, QString> exports;
 	exports["css"] = "colors.css";
 	exports["dmenu"] = "colors-wal-dmenu.h";

@@ -1,22 +1,20 @@
 #include "../include/logging.h"
 #include "../include/sequences.h"
 #include "../include/util.h"
-#include <QDir>
 #include <QDirIterator>
 #include <QRegularExpression>
-#include <QFileInfoList>
 #include <QDirListing>
 
 Sequences::Sequences() = default;
 
 /**
- * [Sequences::send Send colors to all open terminals]
+ * Sequences::send Send colors to all open terminals
  * @param colors   [description]
  * @param cacheDir [description]
  * @param toSend   [description]
  * @param vteFix   [description]
  */
-void Sequences::send(QJsonObject colors, QString cacheDir, bool toSend, bool vteFix) {
+void Sequences::send(QJsonObject &colors, QString cacheDir, bool toSend, bool vteFix) {
     auto sequences = createSequences(colors, vteFix);
 
     // Writing to "/dev/pts/[0-9] lets you send data to open terminals.
@@ -34,14 +32,14 @@ void Sequences::send(QJsonObject colors, QString cacheDir, bool toSend, bool vte
 }
 
 /**
- * [Sequences::setSpecial Convert a hex color to a special sequence]
+ * Sequences::setSpecial Convert a hex color to a special sequence
  * @param  index     [description]
  * @param  color     [description]
  * @param  itermName [description]
  * @param  alpha     [description]
  * @return           [description]
  */
-QString Sequences::setSpecial(int index, QString color, QString itermName, int alpha) {
+QString Sequences::setSpecial(int index, QString color, const QString& itermName, int alpha) {
     if (Setting::OS.toLower() == "darwin" & !itermName.isEmpty()) {
         return QString("\033]P%1%2\033\\").arg(itermName, color.remove('#'));
     }
@@ -54,12 +52,12 @@ QString Sequences::setSpecial(int index, QString color, QString itermName, int a
 }
 
 /**
- * [Sequences::setColor Convert a hex color to a text color sequence]
+ * Sequences::setColor Convert a hex color to a text color sequence
  * @param  index    [description]
  * @param  hexColor [description]
  * @return          [description]
  */
-QString Sequences::setColor(int index, QString hexColor) {
+QString Sequences::setColor(int index, QString &hexColor) {
     if (Setting::OS.toLower() == "darwin") {
         return QString("\033]P%1x%2\033\\").arg(index).arg(hexColor);
     }
@@ -73,7 +71,7 @@ QString Sequences::setColor(int index, QString hexColor) {
  * @param  color [description]
  * @return       [description]
  */
-QString Sequences::setItermTabColor(rgb_t color) {
+QString Sequences::setItermTabColor(rgb_t &color) {
     return {};
 }
 
@@ -83,14 +81,15 @@ QString Sequences::setItermTabColor(rgb_t color) {
  * @param  vteFix [description]
  * @return        [description]
  */
-QString Sequences::createSequences(QJsonObject colors, bool vteFix) {
+QString Sequences::createSequences(QJsonObject &colors, bool vteFix) {
     QString alpha = QString("%1").arg(colors.value("alpha").toInt());
     QList<QString> seqs;
 
     for (int i = 0; i <= 16; i++) {
         QString cName = QString("color%1").arg(i);
         QJsonObject c = colors.value("colors").toObject();
-        QString temp = setColor(i, c.value(cName).toString());
+        QString cStr = c.value(cName).toString();
+        QString temp = setColor(i, cStr);
         seqs.append(temp);
     }
 
@@ -106,9 +105,12 @@ QString Sequences::createSequences(QJsonObject colors, bool vteFix) {
     seqs << setSpecial(13, special.value("foreground").toString(), "j");
     seqs << setSpecial(17, special.value("foreground").toString(), "k");
     seqs << setSpecial(19, special.value("background").toString(), "m");
-    seqs << setColor(232, special.value("background").toString());
-    seqs << setColor(256, special.value("foreground").toString());
-    seqs << setColor(257, special.value("background").toString());
+    QString bg = special.value("background").toString();
+    QString fg  = special.value("foreground").toString();
+    QString cursor = special.value("background").toString();
+    seqs << setColor(232, bg);
+    seqs << setColor(256, fg);
+    seqs << setColor(257, cursor);
 
     if (vteFix) {
         seqs << setSpecial(708, special.value("background").toString(), "", alpha.toInt(&ok));
@@ -121,6 +123,10 @@ QString Sequences::createSequences(QJsonObject colors, bool vteFix) {
     return seqs.join("");
 }
 
+/**
+ * Search for a list of terminals at the specified directory
+ * @return
+ */
 QList<QString> Sequences::findTerminals() {
     QDirIterator iter("/dev", QDirIterator::Subdirectories);
     QString ttyDirPattern;

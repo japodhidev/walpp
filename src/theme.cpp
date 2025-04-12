@@ -13,7 +13,7 @@ Theme::Theme() = default;
  * @param name
  * @param light
  */
-void Theme::save(QJsonObject colors, QString name, bool light) {
+void Theme::save(QJsonObject &colors, QString &name, bool light) {
     QString themeFile = name.append(".json");
     QString mode = light ? "light" : "dark";
     QString themePath = Util::joinPath(Setting::CONF_DIR, QStringList() << "colorschemes" << mode << themeFile);
@@ -27,11 +27,14 @@ void Theme::save(QJsonObject colors, QString name, bool light) {
  * @param light
  * @return
  */
-QJsonObject Theme::import(QString inputFile, bool light) {
-    Util::createDir(Util::joinPath(Setting::CONF_DIR, QStringList() << "colorschemes" << "light"));
-    Util::createDir(Util::joinPath(Setting::CONF_DIR, QStringList() << "colorschemes" << "dark"));
+QJsonObject Theme::import(QString &inputFile, bool light) {
+    QString lightDir = Util::joinPath(Setting::CONF_DIR, QStringList() << "colorschemes" << "light");
+    QString darkDir = Util::joinPath(Setting::CONF_DIR, QStringList() << "colorschemes" << "dark");
+    QString darkDirModules = Util::joinPath(Setting::MODULE_DIR, QStringList() << "colorschemes" << "dark");
+    Util::createDir(lightDir);
+    Util::createDir(darkDir);
     // Create module directory
-    Util::createDir(Util::joinPath(Setting::MODULE_DIR, QStringList() << "colorschemes" << "dark"));
+    Util::createDir(darkDirModules);
 
     QString themeFile;
 
@@ -66,7 +69,8 @@ QJsonObject Theme::import(QString inputFile, bool light) {
         QString path = Util::joinPath(Setting::CACHE_DIR, QStringList() << "last_used_theme");
         Util::saveFile(fileName, path);
 
-        return parse(t_info.absoluteFilePath());
+        QString themePath = t_info.absoluteFilePath();
+        return parse(themePath);
     }
 
 
@@ -80,7 +84,7 @@ QJsonObject Theme::import(QString inputFile, bool light) {
  * @return
  */
 QString Theme::getRandomTheme(bool mode) {
-    QList<QString> themes = listUserThemes();
+    QList<QString> themes = listThemes(mode);
     int randomIdx = Util::getRandomInt(0, (int)themes.size());
 
     return themes.at(randomIdx);
@@ -98,7 +102,7 @@ QString Theme::getRandomUserTheme() {
     return themes.at(randomIdx);
 }
 
-QJsonObject Theme::parse(QString themeFile) {
+QJsonObject Theme::parse(QString &themeFile) {
     QJsonObject jsonData = Util::readJSONFile(themeFile);
     if (!jsonData.contains("wallpaper")) {
         jsonData.insert("wallpaper", QJsonValue("None"));
@@ -149,7 +153,7 @@ QList<QString> Theme::listThemes(bool mode) {
  * @param data
  * @return
  */
-QJsonObject Theme::terminalSexyToWal(QJsonObject data) {
+QJsonObject Theme::terminalSexyToWal(QJsonObject &data) {
     QJsonObject result = {};
     result.insert("colors", {});
     QJsonObject special {

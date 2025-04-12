@@ -67,7 +67,8 @@ void Util::saveJSONFile(QJsonObject &data, QString &exportFile) {
     QFileInfo fileInfo(exportFile);
 
     // Create directory if it doesn't already exist
-    createDir(fileInfo.absolutePath());
+    QString path = fileInfo.absolutePath();
+    createDir(path);
 
     if (!jsonFile.open(QIODevice::WriteOnly | QIODevice::Text)) {
         std::string message = QString("Couldn't open the JSON file '%1' for writing!").arg(fileInfo.absoluteFilePath()).toStdString();
@@ -84,7 +85,7 @@ void Util::saveJSONFile(QJsonObject &data, QString &exportFile) {
  * Alias to create the cache dir.
  * @param directory
  */
-void Util::createDir(QString directory) {
+void Util::createDir(QString &directory) {
     QDir dir;
     // bool success = dir.mkdir(directory);
     bool success = dir.mkpath(directory);
@@ -98,7 +99,7 @@ void Util::createDir(QString directory) {
  * Delete files
  * @param directory [description]
  */
-void Util::removeDirFiles(QString directory) {
+void Util::removeDirFiles(const QString& directory) {
     QFileInfo dInfo(directory);
     if (dInfo.exists()) {
         Logging::info(QString("Deleting: %1").arg(dInfo.absoluteFilePath()));
@@ -119,13 +120,6 @@ void Util::removeDirFiles(QString directory) {
         std::string message = QString("Non-existent directory provided: '%1'!").arg(directory).toStdString();
         throw AppException(message);
     }
-}
-
-/**
- * Logging config.
- */
-void Util::setupLogging() {
-
 }
 
 /**
@@ -255,7 +249,8 @@ void Util::saveFileLines(QList<QString> &data, QString &exportFile, bool mkDir) 
     QFile file;
     QFileInfo fileInfo(exportFile);
     if (mkDir) {
-        createDir(fileInfo.absolutePath());
+        QString path = fileInfo.absolutePath();
+        createDir(path);
         file.setFileName(Util::joinPath(exportFile, QStringList() << fileInfo.fileName()));
     } else {
         file.setFileName(exportFile);
@@ -296,7 +291,7 @@ void Util::saveFileLines(QList<QString> &data, QString &exportFile, bool mkDir) 
  * @param program
  * @return
  */
-QString Util::which(QString program) {
+QString Util::which(const QString& program) {
     return QStandardPaths::findExecutable(program);
 }
 
@@ -306,7 +301,7 @@ QString Util::which(QString program) {
  * @param command
  * @param args
  */
-void Util::pOpen(QString command, QStringList args) {
+void Util::pOpen(const QString& command, const QStringList& args) {
     QProcess process;
     process.setStandardOutputFile(QProcess::nullDevice());
     process.setStandardErrorFile(QProcess::nullDevice());
@@ -322,7 +317,7 @@ void Util::pOpen(QString command, QStringList args) {
  * @param command
  * @param args
  */
-void Util::run(QString command, QStringList args) {
+void Util::run(const QString& command, QStringList &args) {
     QProcess process;
     process.setStandardOutputFile(QProcess::nullDevice());
     process.setStandardErrorFile(QProcess::nullDevice());
@@ -339,7 +334,7 @@ void Util::run(QString command, QStringList args) {
  * @param arguments
  * @return
  */
-QByteArray Util::checkOutput(QString command, QStringList arguments) {
+QByteArray Util::checkOutput(const QString& command, const QStringList& arguments) {
     QProcess process;
     process.setStandardErrorFile(QProcess::nullDevice());
     process.setStandardInputFile(QProcess::nullDevice());
@@ -371,7 +366,7 @@ QString Util::normalizeImgPath(QString &img) {
     return img;
 }
 
-QJsonObject Util::colorsToMap(QList<QString> colors, QString &img) {
+QJsonObject Util::colorsToMap(const QList<QString>& colors, QString &img) {
     QString imgPath = normalizeImgPath(img);
     QJsonObject special {
         {"background", colors.at(0)},
@@ -441,7 +436,7 @@ QList<QString> Util::genericAdjust(QList<QString> colors, bool light) {
 QList<QString> Util::saturateColors(QList<QString> colors, int amount) {
     QList<QString> newColors;
     if (amount & ((float) amount <= 1.0)) {
-        newColors = Color::saturateMultiple(colors, amount);
+        newColors = Color::saturateMultiple(colors, (float) amount);
     }
 
     return newColors;
@@ -527,7 +522,8 @@ QJsonObject Util::getColors(QString img, bool light, QString backend, QString ca
         Logging::info("Found cached colorscheme.");
         Theme th;
         Color color;
-        cs = th.import(cFile.absoluteFilePath());
+        QString cFilePath = cFile.absoluteFilePath();
+        cs = th.import(cFilePath);
         auto alpha = QJsonValue(color.alphaValue);
         cs.insert("alpha",  alpha);
     } else {

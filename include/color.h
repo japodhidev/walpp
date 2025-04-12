@@ -29,15 +29,13 @@ public:
     QString lighten(float amount, QString color = QString("")) const;
     QString darken(float amount, QString color = QString("")) const;
     QString saturate(float amount, QString color = QString("")) const;
-    static QString c_lighten(float amount, QString color = QString(""));
-    static QString c_darken(float amount, QString color = QString(""));
     static QString c_saturate(float amount, QString color = QString(""));
     static QList<QString> saturateMultiple(QList<QString> &colors, float amount);
     static QString blendColor(QString &color, QString &otherColor);
 private:
     QString hexToXRgba() const;
     QString saturateColor(double amount) const;
-    yiq_t rgbToYiq(rgb_t &color);
+    static yiq_t rgbToYiq(rgb_t &color);
     static QColor validateColorStr(QString &color);
 };
 

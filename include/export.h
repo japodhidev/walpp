@@ -16,13 +16,12 @@
 class Export {
 public:
 	Export();
-	~Export();
-	static void exportAll(QJsonObject colors, QString outputDir = Setting::CACHE_DIR);
-	static void exportSingle(QJsonObject colors, QString exportType, QString outputFile = nullptr);
+	static void exportAll(QJsonObject &colors, const QString& outputDir = Setting::CACHE_DIR);
+	static void exportSingle(QJsonObject &colors, QString &exportType, const QString& outputFile = nullptr);
 private:
-	static QMap<QString, QString> flattenColors(QJsonObject colors);
-	static void parseTemplate(QMap<QString, QString> colors, QString inputFile, QString outputFile = nullptr);
-	static QString getExportType(QString expType);
+	static QMap<QString, QString> flattenColors(QJsonObject &colors);
+	static void parseTemplate(QMap<QString, QString> &colors, QString &inputFile, QString outputFile = nullptr);
+	static QString getExportType(QString &xpType);
 	
 };
 

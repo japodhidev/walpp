@@ -16,16 +16,16 @@
 class Theme {
 public:
     Theme();
-    void save(QJsonObject colors, QString name, bool light = false);
-    QJsonObject import(QString inputFile, bool light = false);
+    static void save(QJsonObject &colors, QString &name, bool light = false);
+    static QJsonObject import(QString &inputFile, bool light = false);
     static void listAllThemes();
 private:
     static QString getRandomTheme(bool mode = true);
     static QString getRandomUserTheme();
-    static QJsonObject parse(QString themeFile);
+    static QJsonObject parse(QString &themeFile);
     static QList<QString> listUserThemes();
     static QList<QString> listThemes(bool mode = true);
-    static QJsonObject terminalSexyToWal(QJsonObject data);
+    static QJsonObject terminalSexyToWal(QJsonObject &data);
     static QList<QString> listUtil(QString &dirName, bool mode);
 
 };

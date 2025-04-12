@@ -1,8 +1,7 @@
-#include <utility>
-#include "../include/util.h"
 #include "../include/appexception.h"
 #include "../include/backend.h"
 #include "../include/color.h"
+#include "../include/util.h"
 
 /**
  * Call Imagemagick to generate a scheme

@@ -2,7 +2,6 @@
 #include "../include/image.h"
 #include "../include/logging.h"
 #include "../include/util.h"
-#include <QDir>
 #include <QDirIterator>
 #include <QRandomGenerator>
 

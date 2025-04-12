@@ -6,6 +6,7 @@
 #include "../include/color.h"
 #include "../include/export.h"
 #include "../include/image.h"
+#include "../include/logging.h"
 #include "../include/reload.h"
 #include "../include/sequences.h"
 #include "../include/theme.h"
@@ -19,13 +20,16 @@ int main(int argc, char *argv[]) {
     QCoreApplication coreApplication(argc, argv);
     QCoreApplication::setApplicationName("walpp");
     QCoreApplication::setApplicationVersion(Setting::version);
-    QString sampleColor = "#FBAF28";
+    /*QString sampleColor = "#FBAF28";
     Color color(sampleColor);
-
+*/
     QString confDir = Setting::CONF_DIR;
-    Util::createDir(Util::joinPath(confDir, QStringList() << "templates"));
-    Util::createDir(Util::joinPath(confDir, QStringList() << "colorschemes" << "light"));
-    Util::createDir(Util::joinPath(confDir, QStringList() << "colorschemes" << "dark"));
+    QString templateDir = Util::joinPath(confDir, QStringList() << "templates");
+    QString lightDir = Util::joinPath(confDir, QStringList() << "colorschemes" << "light");
+    QString darkDir = Util::joinPath(confDir, QStringList() << "colorschemes" << "dark");
+    Util::createDir(templateDir);
+    Util::createDir(lightDir);
+    Util::createDir(darkDir);
 
     // Process args
     QCommandLineParser parser;
@@ -175,7 +179,6 @@ int main(int argc, char *argv[]) {
 }
 
 void parseExitingArgs(QCommandLineParser &parser) {
-    Util util;
     // Process args that exit
     if (parser.optionNames().empty()) {
         parser.showHelp();
@@ -185,13 +188,13 @@ void parseExitingArgs(QCommandLineParser &parser) {
     // std::exit(EXIT_FAILURE);
 
     if (parser.isSet("preview")) {
-        qDebug() << "Current colorscheme:";
+        Logging::info(QString("Current colorscheme:"));
         Util::palette();
         std::exit(EXIT_SUCCESS);
     }
 
     if (parser.isSet("directory") & parser.isSet("theme")) {
-        qDebug() << "Conflicting arguments -i and -f.";
+        Logging::error(QString("Conflicting arguments -i and -f."));
         std::exit(EXIT_FAILURE);
     }
 
@@ -202,8 +205,8 @@ void parseExitingArgs(QCommandLineParser &parser) {
     }
 
     if (!parser.isSet("directory") & !parser.isSet("theme") & !parser.isSet("w") & !parser.isSet("backend")) {
-        qDebug() << "Error: No input specified.";
-        qDebug() << "--backend, --theme, -i or -R are required.";
+        QString msg("Error: No input specified. --backend, --theme, -i or -R are required.");
+        Logging::error(msg);
         std::exit(EXIT_FAILURE);
     }
 
@@ -222,7 +225,6 @@ void parseExitingArgs(QCommandLineParser &parser) {
 }
 
 void parseArgs(QCommandLineParser &parser) {
-    Util util;
     Color color;
     // Process args
     if (parser.isSet("q")) {
@@ -248,7 +250,7 @@ void parseArgs(QCommandLineParser &parser) {
         Image img_o(img);
         imageFile = img_o.getImage(img, const_cast<QString &>(Setting::CACHE_DIR), it, recurse);
         QString bEnd = parser.isSet("backend") ? parser.value("backend") : "wal";
-        plainColors = util.getColors(imageFile, l, bEnd, Setting::CACHE_DIR, saturation);
+        plainColors = Util::getColors(imageFile, l, bEnd, Setting::CACHE_DIR, saturation);
         // Insert alpha value provided
         plainColors.insert("alpha", color.alphaValue);
     }
@@ -257,25 +259,23 @@ void parseArgs(QCommandLineParser &parser) {
         qDebug() << "colorsPlain = theme.file(theme, light)";
     }
 
-    /*if (parser.isSet("restore")) {
-        qDebug() << "colorsPlain = theme.file(os.path.join(CACHE_DIR, 'colors.json'))";
-    }*/
-
     if (parser.isSet("w")) {
         QString wallPath = Util::joinPath(Setting::CACHE_DIR, QStringList() << "walpp");
         auto cachedWallpaper = Util::readFile(wallPath);
         QString walStr = QString(cachedWallpaper.at(0));
-        plainColors = util.getColors(walStr, l, parser.value("backend"), saturation);
+        plainColors = Util::getColors(walStr, l, parser.value("backend"), saturation);
         // Insert alpha value provided
         plainColors.insert("alpha", color.alphaValue);
     }
 
     if (parser.isSet("background")) {
-        qDebug() << "Set background";
         QString bg;
         if (!parser.value("background").startsWith("#")) {
             bg = parser.value("background").prepend("#");
-            // TODO: Insert new bg value to nested item
+            // Insert new bg value to nested item
+            QJsonObject specialObj = plainColors.value("special").toObject();
+            specialObj.insert("background", bg);
+            plainColors.insert("special", specialObj);
         }
     }
 
@@ -286,8 +286,8 @@ void parseArgs(QCommandLineParser &parser) {
     }
 
     if (parser.isSet("saveTheme")) {
-        Theme th;
-        th.save(plainColors, parser.value("saveTheme"), l);
+        QString themeName = parser.value("saveTheme");
+        Theme::save(plainColors, themeName, l);
     }
 
     Sequences::send(plainColors, Setting::CACHE_DIR, true, true);
@@ -303,14 +303,13 @@ void parseArgs(QCommandLineParser &parser) {
     }
 
     if (parser.isSet("externalScript")) {
-        qDebug() << "for cmd in args.o:\n"
-                    "            util.disown([cmd])";
         QStringList script = parser.value("externalScript").split(' ');
         Util::disown(const_cast<QString &>(script.at(0)), QStringList() << script.sliced(1));
     }
 
     if (!parser.isSet("e")) {
         // TODO: reload::gtk();
+        Reload::gtk();
     }
     // Gracefully exit.
     std::exit(EXIT_SUCCESS);

@@ -209,7 +209,7 @@ QString Color::saturate(float amount, QString color) const {
         std::string message = QString("Invalid amount: '%1' provided. Amount should be a value between 0-1.0").arg(amount).toStdString();
         throw AppException(message);
     }
-    // float per100 = amount * 100;
+
     hls_t hls{};
     if (color.isEmpty()) {
         hls.hue_t = this->walColor.hslHueF();
@@ -265,12 +265,11 @@ QString Color::blendColor(QString &color, QString &otherColor) {
     auto c_color = QColor(color);
     auto o_color = QColor(otherColor);
 
-    rgb_t newColor{};
-    newColor.red_t = c_color.redF() * 0.5 + o_color.redF() * 0.5;
-    newColor.green_t = c_color.greenF() * 0.5 + o_color.greenF() * 0.5;
-    newColor.red_t = c_color.blueF() * 0.5 + o_color.blueF() * 0.5;
+    float red_t = c_color.redF() * 0.5f + o_color.redF() * 0.5f;
+    float green_t = c_color.greenF() * 0.5f + o_color.greenF() * 0.5f;
+    float blue_t = c_color.blueF() * 0.5f + o_color.blueF() * 0.5f;
 
-    QColor rColor = QColor::fromRgbF(newColor.red_t, newColor.green_t, newColor.blue_t);
+    QColor rColor = QColor::fromRgbF(red_t, green_t, blue_t);
 
     return rColor.name(QColor::HexRgb);
 }
@@ -328,7 +327,7 @@ QList<QString> Color::saturateMultiple(QList<QString> &colors, float amount) {
     QList<QString> saturatedColors;
     foreach (QString color, colors) {
         Color c(color);
-        QString sat_c = c.saturate((int) amount);
+        QString sat_c = c.saturate(amount);
         saturatedColors.append(sat_c);
     }
 
@@ -347,37 +346,4 @@ QString Color::c_saturate(float amount, QString color) {
     QColor hslColour = QColor::fromHslF(colour.hueF(), saturation, colour.lightnessF());
 
     return hslColour.name(QColor::HexRgb);
-}
-
-
-/**
- * Lighten a hex color
- * @param  amount [description]
- * @param  color  [description]
- * @return        [description]
- */
-QString Color::c_lighten(float amount, QString color) {
-    QColor colour = validateColorStr(color);
-    float red = colour.redF() + (255 - colour.redF()) * amount;
-    float green = colour.greenF() + (255 - colour.greenF()) * amount;
-    float blue = colour.blueF() + (255 - colour.blueF()) * amount;
-
-    QColor c(red, green, blue);
-    return c.name(QColor::HexRgb);
-}
-
-/**
- * Darken a hex color
- * @param  amount [description]
- * @param  color  [description]
- * @return        [description]
- */
-QString Color::c_darken(float amount, QString color) {
-    QColor colour = validateColorStr(color);
-    float red = colour.redF() * (1 - amount);
-    float green = colour.greenF() * (1 - amount);
-    float blue = colour.blueF() * (1 - amount);
-
-    QColor c(red, green, blue);
-    return c.name(QColor::HexRgb);
 }

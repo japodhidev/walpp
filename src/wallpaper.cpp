@@ -12,7 +12,7 @@ Wallpaper::Wallpaper() {
  * Identify the currently running desktop environment.
  * @brief Wallpaper::getDesktopEnv
  */
-QString Wallpaper::getDesktopEnv() {
+QString Wallpaper::getDesktopEnv() const {
     if (this->processEnv.contains("XDG_CURRENT_DESKTOP")) {
         return this->processEnv.value("XDG_CURRENT_DESKTOP");
     }
