@@ -289,8 +289,9 @@ void parseArgs(QCommandLineParser &parser) {
         QString themeName = parser.value("saveTheme");
         Theme::save(plainColors, themeName, l);
     }
-
-    Sequences::send(plainColors, Setting::CACHE_DIR, true, true);
+    auto toSend = parser.isSet("s");
+    auto vteFix = parser.isSet("vte");
+    Sequences::send(plainColors, Setting::CACHE_DIR, !toSend, vteFix);
 
     // TODO: if sys.stdout.isatty():
     Util::palette();
