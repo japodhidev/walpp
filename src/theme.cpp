@@ -68,7 +68,8 @@ QJsonObject Theme::import(QString &inputFile, bool light) {
     QFileInfo t_info(themeFile);
     if (t_info.exists() & t_info.isFile()) {
         QString logMsg = QString("Set theme to \033[1;37m%1\033[0m.").arg(t_info.fileName());
-        Logging::info(logMsg);
+        Logging::info(QString("\033[1;31m%1\033[0m: %2").arg("theme", logMsg));
+        
         QString fileName = t_info.absoluteFilePath();
         QString path = Util::joinPath(Setting::CACHE_DIR, QStringList() << "last_used_theme");
         Util::saveFile(fileName, path, false);

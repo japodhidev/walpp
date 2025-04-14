@@ -41,7 +41,7 @@ QString Image::getImage(QString &img, QString &cacheDir, bool iterative, bool re
     Util::saveFile(wallpaper, path, false);
 
     QString logMessage = QString("Using image \033[1;37m%1\033[0m.").arg(wallpaper);
-    Logging::info(logMessage);
+    Logging::info(QString("\033[1;31m%1\033[0m: %2").arg("image", logMessage));
 
     return wallpaper;
 }

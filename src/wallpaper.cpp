@@ -1,6 +1,7 @@
+#include "../include/appexception.h"
+#include "../include/logging.h"
 #include "../include/wallpaper.h"
 #include "../include/util.h"
-#include "../include/appexception.h"
 #include <QUrl>
 #include <QFileInfo>
 
@@ -175,6 +176,8 @@ void Wallpaper::change(QString &img) {
     } else {
         setDesktopWallpaper(desktop, img);
     }
+
+    Logging::info(QString("\033[1;31m%1\033[0m: %2").arg("wallpaper", "Set the new wallpaper."));
 }
 
 /**

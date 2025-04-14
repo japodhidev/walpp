@@ -519,7 +519,7 @@ QJsonObject Util::getColors(QString img, bool light, QString backend, QString ca
     QFileInfo cFile(cacheFile);
     QJsonObject cs;
     if (cFile.isFile()) {
-        Logging::info("Found cached colorscheme.");
+        Logging::info(QString("\033[1;31m%1\033[0m: %2").arg("colors", "Found cached colorscheme."));
         Theme th;
         Color color;
         QString cFilePath = cFile.absoluteFilePath();
@@ -527,9 +527,9 @@ QJsonObject Util::getColors(QString img, bool light, QString backend, QString ca
         auto alpha = QJsonValue(color.alphaValue);
         cs.insert("alpha",  alpha);
     } else {
-        Logging::info("Generating a colorscheme.");
+        Logging::info(QString("\033[1;31m%1\033[0m: %2").arg("colors", "Generating a colorscheme."));
         QString bEnd = getBackend(backend);
-        Logging::info(QString("Using %1 backend.").arg(bEnd));
+        Logging::info(QString("\033[1;31m%1\033[0m: Using %2 backend.").arg("colors", bEnd));
         if (bEnd == "wal") {
             QList<QString> colorList = Wal::get(img, light);
             bool ok;
@@ -545,7 +545,7 @@ QJsonObject Util::getColors(QString img, bool light, QString backend, QString ca
             Util util;
             QString fPath = cFile.absoluteFilePath();
             util.saveJSONFile(cs, fPath);
-            Logging::info("Generation complete.");
+            Logging::info(QString("\033[1;31m%1\033[0m: %2").arg("colors", "Generation complete."));
         } else {
             qDebug() << QString("Unsupported backend - %1").arg(backend);
         }

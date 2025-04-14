@@ -39,8 +39,8 @@ void Export::exportAll(QJsonObject &colors, const QString& outputDir) {
         }
     }
 
-    Logging::info("Exported all files");
-    Logging::info("Exported all user files");
+    Logging::info(QString("\033[1;31m%1\033[0m: %2").arg("export", "Exported all files."));
+    Logging::info(QString("\033[1;31m%1\033[0m: %2").arg("export", "Exported all user files."));
 }
 
 /**
@@ -59,7 +59,7 @@ void Export::exportSingle(QJsonObject &colors, QString &exportType, const QStrin
 	QTextStream out(stdout);
 	if (tFile.isFile()) {
 		parseTemplate(mColors, templateFile, oFile);
-        Logging::info(QString("Exported %1").arg(exportType));
+        Logging::info(QString("\033[1;31m%1\033[0m: Exported %2").arg("export", exportType));
 	} else {
 		out << "Template '" << exportType << "' doesn't exist." << Qt::endl;
 	}

@@ -119,6 +119,6 @@ void Reload::env(bool ttyReload) {
     kitty();
     sway();
     polybar();
-    Logging::info("Reloaded environment.");
+    Logging::info(QString("\033[1;31m%1\033[0m: %2").arg("reload", "Reloaded environment."));
     tty(ttyReload);
 }

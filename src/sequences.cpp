@@ -28,7 +28,7 @@ void Sequences::send(QJsonObject &colors, QString cacheDir, bool toSend, bool vt
     }
     QString seqPath = Util::joinPath(cacheDir, QStringList() << "sequences");
     Util::saveFile(sequences, seqPath, false);
-    Logging::info("Set terminal colors");
+    Logging::info(QString("\033[1;31m%1\033[0m: %2").arg("sequences", "Set terminal colors."));
 }
 
 /**
