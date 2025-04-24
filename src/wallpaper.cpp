@@ -5,6 +5,12 @@
 #include <QUrl>
 #include <QFileInfo>
 
+#if defined(_WIN32) || defined(_WIN64)
+#include <windows.h>
+#include <cwchar>
+#endif
+
+
 Wallpaper::Wallpaper() {
     this->processEnv = QProcessEnvironment::systemEnvironment();
 }
@@ -91,7 +97,7 @@ void Wallpaper::setWMWallpaper(QString &img) {
 }
 
 /**
- * Set the wallpaper on macOS
+ * Set the wallpaper for a particular desktop environment
  * @brief Wallpaper::setDesktopWallpaper
  * @param desktop
  * @param img
@@ -141,11 +147,21 @@ void Wallpaper::setDesktopWallpaper(QString &desktop, QString &img) {
 }
 
 /**
- * FIXME: Implement setting wallpaper in Windows
+ * Set the wallpaper in Windows
  * @brief Wallpaper::setWinWallpaper
  * @param img
  */
-void Wallpaper::setWinWallpaper(QString &img) {}
+#if defined(_WIN32) || defined(_WIN64)
+void Wallpaper::setWinWallpaper(QString &img) {
+    size_t convertedChars;
+    std::wstring wImagePath = img.toStdWString();
+
+    bool optionW = SystemParametersInfoW(SPI_SETDESKWALLPAPER, 0, wImagePath.c_str(), SPIF_UPDATEINIFILE | SPIF_SENDCHANGE);
+    if (!optionW) {
+        SystemParametersInfoA(SPI_SETDESKWALLPAPER, 0, wImagePath.c_str(), SPIF_UPDATEINIFILE | SPIF_SENDCHANGE);
+    }
+}
+#endif
 
 /**
  * FIXME: FIXME: Implement setting wallpaper in MacOS
