@@ -26,14 +26,16 @@ qt_add_executable(walpp
         include/theme.h src/theme.cpp
         include/export.h src/export.cpp
         include/logging.h src/logging.cpp
-        include/HaishokuAlgo.h
-        include/HaishokuImage.h src/HaishokuImage.cpp src/HaishokuAlgo.cpp)
+        include/HaishokuAlgo.h src/HaishokuAlgo.cpp
+        include/HaishokuImage.h src/HaishokuImage.cpp
+        include/haishoku.h src/haishoku.cpp)
 
 target_link_libraries(walpp
     PRIVATE
         Qt::Core
         Qt::Gui
         ${ImageMagick_LIBRARIES}
+        curl
 )
 
 include(GNUInstallDirs)

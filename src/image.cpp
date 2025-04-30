@@ -148,7 +148,7 @@ QString Walpp::Image::getNextImage(bool recursive)
                Util::joinPath(imgDir.absolutePath(), QStringList() << "");
 }
 
-std::set<std::string> Walpp::Image::extractColours(std::string &imagePath, bool max) {
+std::set<std::string> Walpp::Image::extractColours(std::string &imagePath, bool max, bool mode) {
     Magick::InitializeMagick(nullptr);
     Magick::Image image;
 
@@ -183,9 +183,13 @@ std::set<std::string> Walpp::Image::extractColours(std::string &imagePath, bool 
                 float b = clr.quantumBlue() * 255 / ((Magick::Quantum) 65535.0);
 
                 std::ostringstream ss;
-                ss << "#" << std::hex << std::setw(2) << std::setfill('0') << r
-                    << std::setw(2) << std::setfill('0') << g
-                    << std::setw(2) << std::setfill('0') << b;
+                if (mode) {
+                    ss << "#" << std::hex << std::setw(2) << std::setfill('0') << r
+                       << std::setw(2) << std::setfill('0') << g
+                       << std::setw(2) << std::setfill('0') << b;
+                } else {
+                    ss << r << "," << g << "," << b;
+                }
                 uniqueColors.insert(ss.str());
             }
         }

@@ -10,7 +10,7 @@ public:
     HaishokuAlgo();
     static std::vector<ColorTuple> sortByRGB(const std::vector<ColorTuple>& colors);
     static RGBMaxInfo rgbMaximum(const std::vector<ColorTuple>& colors);
-    static GroupedColors groupByAccuracy(const std::vector<ColorTuple>& colors, int accuracy = 3);
+    static GroupedColors groupByAccuracy(const std::vector<ColorTuple>& colors);
     static ColorTuple getWeightedMean(const std::vector<ColorTuple>& group);
 };
 

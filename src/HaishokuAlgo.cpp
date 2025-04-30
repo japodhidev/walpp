@@ -30,12 +30,10 @@ ColorTuple HaishokuAlgo::getWeightedMean(const std::vector<ColorTuple> &group) {
 }
 
 /**
- * FIXME: accuracy is never used
  * @param colors
- * @param accuracy
  * @return
  */
-GroupedColors HaishokuAlgo::groupByAccuracy(const std::vector<ColorTuple> &colors, int accuracy) {
+GroupedColors HaishokuAlgo::groupByAccuracy(const std::vector<ColorTuple> &colors) {
     GroupedColors rgbGroups{};
     RGBMaxInfo info = rgbMaximum(colors);
 
@@ -93,4 +91,6 @@ std::vector<ColorTuple> HaishokuAlgo::sortByRGB(const std::vector<ColorTuple> &c
     std::sort(sorted.begin(), sorted.end(), [](const ColorTuple &a, const ColorTuple &b) {
         return std::get<1>(a) < std::get<1>(b);
     });
+
+    return sorted;
 }

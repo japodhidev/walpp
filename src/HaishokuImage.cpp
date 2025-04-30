@@ -7,16 +7,15 @@
 HaishokuImage::HaishokuImage()  = default;
 
 Magick::Blob HaishokuImage::downloadImage(const std::string &url) {
-    CURL *curl;
-    CURLcode res;
+    CURL *curl = curl_easy_init();
     std::vector<char> buffer;
 
-    curl = curl_easy_init();
     if (!curl) {
         std::string message = "CURL init failed!";
         throw AppException(message);
     }
 
+    CURLcode res;
     curl_easy_setopt(curl, CURLOPT_URL, url.c_str());
     curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, writeCallback);
     curl_easy_setopt(curl, CURLOPT_WRITEDATA, &buffer);
@@ -38,16 +37,26 @@ Magick::Blob HaishokuImage::downloadImage(const std::string &url) {
  * @param imagePath
  * @return
  */
-std::map<std::string, int> HaishokuImage::getColors(const std::string &imagePath) {
-    std::map<std::string, int> result;
-    auto colors = Walpp::Image::extractColours(const_cast<std::string &>(imagePath), true);
+std::vector<ColorTuple> HaishokuImage::getColors(const std::string &imagePath) {
+    std::vector<ColorTuple> result;
+    auto colors = Walpp::Image::extractColours(const_cast<std::string &>(imagePath), true, false);
 
     for (const auto &item : colors) {
-        result[item]++;
+        // TODO: Split string by ',' delimiter.
+        QStringList rgbStr = QString::fromStdString(item).split(u',', Qt::SkipEmptyParts);
+        if (rgbStr.size() != 3) {
+            std::string message = "Splitting error.Invalid RGB string values provided!";
+            throw AppException(message);
+        }
+        // TODO: insert the split values into the vector
+        bool ok;
+        std::array<int, 3> rgbArray = {rgbStr.at(0).toInt(&ok), rgbStr.at(1).toInt(&ok), rgbStr.at(2).toInt(&ok)};
+        // FIXME: Dynamically assign the first value
+        result.emplace_back(0, rgbArray);
     }
 
     return result;
-}67
+}
 
 Magick::Image HaishokuImage::getImage(const std::string &imagePath) {
     Magick::Image image;
@@ -79,7 +88,7 @@ void HaishokuImage::jointImage(const std::vector<Magick::Image> &images) {
     palette.type(MagickCore::TrueColorType);
 
     size_t offset = 0;
-    for (const auto img : images) {
+    for (const auto &img : images) {
         palette.composite(img, Magick::Geometry(offset, 0), Magick::OverCompositeOp);
         offset += blockSize.width();
     }
@@ -87,7 +96,7 @@ void HaishokuImage::jointImage(const std::vector<Magick::Image> &images) {
     palette.display();
 }
 
-Magick::Image HaishokuImage::newImage(const std::string &mode, const Magick::Geometry &size, const Magick::Color &color) {
+Magick::Image HaishokuImage::newImage(const Magick::Geometry &size, const Magick::Color &color) {
     Magick::Image img;
     img.size(size);
     img.backgroundColor(color);
@@ -97,4 +106,6 @@ Magick::Image HaishokuImage::newImage(const std::string &mode, const Magick::Geo
 
 size_t HaishokuImage::writeCallback(void *contents, size_t size, size_t nmemb, void *userp) {
     ((std::vector<char>*)userp)->insert(((std::vector<char>*)userp)->end(), (char*) contents, (char*) contents + size + nmemb);
+
+    return size + nmemb;
 }

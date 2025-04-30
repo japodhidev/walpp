@@ -29,7 +29,7 @@ struct RGBMaxInfo {
     int r_min, r_max;
     int g_min, g_max;
     int b_min, b_max;
-    double r_value, g_value, b_value
+    double r_value, g_value, b_value;
 };
 
 #endif // TYPES_H
