@@ -6,7 +6,7 @@
 #include <QRandomGenerator>
 
 
-Image::Image(QString &img_dir) {
+Walpp::Image::Image(QString &img_dir) {
     imgDir = QFileInfo(img_dir);
 }
 
@@ -19,7 +19,7 @@ Image::Image(QString &img_dir) {
  * @param recursive
  * @return
  */
-QString Image::getImage(QString &img, QString &cacheDir, bool iterative, bool recursive)
+QString Walpp::Image::getImage(QString &img, QString &cacheDir, bool iterative, bool recursive)
 {
     QString wallpaper;
     QFileInfo i(img);
@@ -51,7 +51,7 @@ QString Image::getImage(QString &img, QString &cacheDir, bool iterative, bool re
  * @brief Image::getImagesRecursively
  * @return
  */
-QStringList Image::getImagesRecursively()
+QStringList Walpp::Image::getImagesRecursively()
 {
     QStringList images;
     QDirIterator dirIt(imgDir.absoluteFilePath(), QDirIterator::Subdirectories);
@@ -71,7 +71,7 @@ QStringList Image::getImagesRecursively()
  * @brief Image::getAllImages
  * @return
  */
-QStringList Image::getAllImages()
+QStringList Walpp::Image::getAllImages()
 {
     QStringList images;
     QFileInfo wallPath(imgDir);
@@ -96,7 +96,7 @@ QStringList Image::getAllImages()
  * @brief Image::getRandomImage
  * @return
  */
-QString Image::getRandomImage(bool recursive)
+QString Walpp::Image::getRandomImage(bool recursive)
 {
     QStringList images;
     if (recursive) {
@@ -121,7 +121,7 @@ QString Image::getRandomImage(bool recursive)
  * @param recursive
  * @return
  */
-QString Image::getNextImage(bool recursive)
+QString Walpp::Image::getNextImage(bool recursive)
 {
     QString wallpaper;
     QStringList images;
@@ -146,5 +146,53 @@ QString Image::getNextImage(bool recursive)
     return recursive ?
                Util::joinPath(imgDir.absolutePath(), QStringList() << wallpaper) :
                Util::joinPath(imgDir.absolutePath(), QStringList() << "");
+}
+
+std::set<std::string> Walpp::Image::extractColours(std::string &imagePath) {
+    Magick::InitializeMagick(nullptr);
+    Magick::Image image;
+
+    try {
+        // Read only first frame of multi-image files like GIFs
+        image.read(imagePath + "[0]");
+        // Check if image is valid
+        if (!image.isValid()) {
+            std::string message = "Invalid image: " + imagePath + " provided!";
+            throw AppException(message);
+        }
+        // Resize to 25%
+        image.resize(Magick::Geometry(image.columns() / 4, image.rows() / 4));
+
+        // Reduce to 16 colors
+        image.quantizeColors(16);
+        image.quantize();
+
+        // Generate a set of unique colors
+        Magick::Pixels view(image);
+        uint width = image.columns();
+        uint height = image.rows();
+        std::set<std::string> uniqueColors;
+        for (int i = 0; i < height; ++i) {
+            for (int j = 0; j < width; ++j) {
+                Magick::Color clr(image.pixelColor(j, i));
+                // Format color to HEX
+                float r = clr.quantumRed() * 255 / ((Magick::Quantum) 65535.0);
+                float g = clr.quantumGreen() * 255 / ((Magick::Quantum) 65535.0);
+                float b = clr.quantumBlue() * 255 / ((Magick::Quantum) 65535.0);
+
+                std::ostringstream ss;
+                ss << "#" << std::hex << std::setw(2) << std::setfill('0') << r
+                    << std::setw(2) << std::setfill('0') << g
+                    << std::setw(2) << std::setfill('0') << b;
+                uniqueColors.insert(ss.str());
+            }
+        }
+
+        return uniqueColors;
+    } catch (Magick::Exception &exception) {
+        std::cerr << "Magick++ error: " << exception.what() << std::endl;
+    }
+
+    return {};
 }
 

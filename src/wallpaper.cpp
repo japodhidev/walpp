@@ -188,7 +188,9 @@ void Wallpaper::change(QString &img) {
     if (Setting::OS.toLower() == "darwin") {
         setMacWallpaper(img);
     } else if (Setting::OS.toLower() == "windows") {
+        #if defined(_WIN32) || defined(_WIN64)
         setWinWallpaper(img);
+        #endif
     } else {
         setDesktopWallpaper(desktop, img);
     }

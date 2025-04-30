@@ -5,12 +5,12 @@
 #include <QTextStream>
 #include "../include/color.h"
 #include "../include/export.h"
-#include "../include/image.h"
 #include "../include/logging.h"
 #include "../include/reload.h"
 #include "../include/sequences.h"
 #include "../include/theme.h"
 #include "../include/wallpaper.h"
+#include "../include/image.h"
 
 void parseExitingArgs(QCommandLineParser &parser);
 
@@ -247,7 +247,7 @@ void parseArgs(QCommandLineParser &parser) {
 
     if (parser.isSet("directory")) {
         auto img = parser.value("directory");
-        Image img_o(img);
+        Walpp::Image img_o(img);
         imageFile = img_o.getImage(img, const_cast<QString &>(Setting::CACHE_DIR), it, recurse);
         QString bEnd = parser.isSet("backend") ? parser.value("backend") : "wal";
         plainColors = Util::getColors(imageFile, l, bEnd, Setting::CACHE_DIR, saturation);
