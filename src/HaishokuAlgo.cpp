@@ -1,0 +1,96 @@
+#include "../include/HaishokuAlgo.h"
+
+HaishokuAlgo::HaishokuAlgo() = default;
+
+ColorTuple HaishokuAlgo::getWeightedMean(const std::vector<ColorTuple> &group) {
+    int sigmaCount = 0;
+    long long sigma_r = 0, sigma_g = 0, sigma_b = 0;
+
+    for (const auto &item : group) {
+        int count = std::get<0>(item);
+        auto rgb  = std::get<1>(item);
+        sigmaCount += count;
+        sigma_r += rgb[0] * count;
+        sigma_g += rgb[1] * count;
+        sigma_b += rgb[2] * count;
+    }
+
+    if (sigmaCount == 0) {
+        return {0, {0, 0, 0}};
+    }
+
+    return {
+        sigmaCount,
+        {
+            static_cast<int>(sigma_r / sigmaCount),
+            static_cast<int>(sigma_g / sigmaCount),
+            static_cast<int>(sigma_b / sigmaCount),
+        }
+    };
+}
+
+/**
+ * FIXME: accuracy is never used
+ * @param colors
+ * @param accuracy
+ * @return
+ */
+GroupedColors HaishokuAlgo::groupByAccuracy(const std::vector<ColorTuple> &colors, int accuracy) {
+    GroupedColors rgbGroups{};
+    RGBMaxInfo info = rgbMaximum(colors);
+
+    for (const auto &color : colors) {
+        int r = std::get<1>(color)[0];
+        int g = std::get<1>(color)[1];
+        int b = std::get<1>(color)[2];
+
+        int r_idx = (r < info.r_min + info.r_value) ? 0 : (r < info.r_min + 2 * info.r_value) ? 1 : 2;
+        int g_idx = (g < info.g_min + info.g_value) ? 0 : (r < info.g_min + 2 * info.g_value) ? 1 : 2;
+        int b_idx = (b < info.b_min + info.b_value) ? 0 : (r < info.b_min + 2 * info.b_value) ? 1 : 2;
+        rgbGroups[r_idx][g_idx][b_idx].push_back(color);
+    }
+
+    return rgbGroups;
+}
+
+RGBMaxInfo HaishokuAlgo::rgbMaximum(const std::vector<ColorTuple> &colors) {
+    auto r_sorted = colors;
+    auto g_sorted = colors;
+    auto b_sorted = colors;
+
+    std::sort(r_sorted.begin(), r_sorted.end(), [](const ColorTuple &a, const ColorTuple &b) {
+        return std::get<1>(a) < std::get<1>(b);
+    });
+
+    std::sort(g_sorted.begin(), g_sorted.end(), [](const ColorTuple &a, const ColorTuple &b) {
+        return std::get<1>(a) < std::get<1>(b);
+    });
+
+    std::sort(b_sorted.begin(), b_sorted.end(), [](const ColorTuple &a, const ColorTuple &b) {
+        return std::get<1>(a) < std::get<1>(b);
+    });
+
+    int r_min = std::get<1>(r_sorted.front())[0];
+    int g_min = std::get<1>(g_sorted.front())[0];
+    int b_min = std::get<1>(b_sorted.front())[0];
+
+    int r_max = std::get<1>(r_sorted.back())[0];
+    int g_max = std::get<1>(g_sorted.back())[0];
+    int b_max = std::get<1>(b_sorted.back())[0];
+
+    return {
+        r_min, r_max,
+        g_min, g_max,
+        b_min, b_max,
+        (r_max - r_min) / 3.0,
+        (g_max - g_min) / 3.0,
+        (b_max - b_min) / 3.0
+    };
+}
+
+std::vector<ColorTuple> HaishokuAlgo::sortByRGB(const std::vector<ColorTuple> &colors) {
+    std::vector<ColorTuple> sorted = colors;
+    std::sort(sorted.begin(), sorted.end(), [](const ColorTuple &a, const ColorTuple &b) {
+        return std::get<1>(a) < std::get<1>(b);
+    });
+}

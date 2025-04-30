@@ -148,7 +148,7 @@ QString Walpp::Image::getNextImage(bool recursive)
                Util::joinPath(imgDir.absolutePath(), QStringList() << "");
 }
 
-std::set<std::string> Walpp::Image::extractColours(std::string &imagePath) {
+std::set<std::string> Walpp::Image::extractColours(std::string &imagePath, bool max) {
     Magick::InitializeMagick(nullptr);
     Magick::Image image;
 
@@ -160,12 +160,14 @@ std::set<std::string> Walpp::Image::extractColours(std::string &imagePath) {
             std::string message = "Invalid image: " + imagePath + " provided!";
             throw AppException(message);
         }
-        // Resize to 25%
-        image.resize(Magick::Geometry(image.columns() / 4, image.rows() / 4));
+        if (!max) {
+            // Resize to 25%
+            image.resize(Magick::Geometry(image.columns() / 4, image.rows() / 4));
 
-        // Reduce to 16 colors
-        image.quantizeColors(16);
-        image.quantize();
+            // Reduce to 16 colors
+            image.quantizeColors(16);
+            image.quantize();
+        }
 
         // Generate a set of unique colors
         Magick::Pixels view(image);

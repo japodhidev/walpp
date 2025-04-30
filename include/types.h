@@ -1,6 +1,10 @@
 #ifndef TYPES_H
 #define TYPES_H
 
+#include <array>
+#include <tuple>
+#include <vector>
+
 struct rgb_t {
     double red_t;
     double green_t;
@@ -17,6 +21,15 @@ struct yiq_t {
     float y_t;
     float i_t;
     float q_t;
+};
+
+using ColorTuple = std::tuple<int, std::array<int, 3>>; //(count, RGB)
+using GroupedColors = std::array<std::array<std::array<std::vector<ColorTuple>, 3>, 3>, 3>;
+struct RGBMaxInfo {
+    int r_min, r_max;
+    int g_min, g_max;
+    int b_min, b_max;
+    double r_value, g_value, b_value
 };
 
 #endif // TYPES_H

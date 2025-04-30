@@ -17,7 +17,7 @@ namespace Walpp {
         QFileInfo imgDir;
         QStringList fileTypes = {"png", "jpg", "jpeg", "jpe", "gif", "webp"};
         QString getImage(QString &img, QString &cacheDir, bool iterative, bool recursive);
-        std::set<std::string> extractColours(std::string &imagePath);
+        static std::set<std::string> extractColours(std::string &imagePath, bool max = false);
     private:
         QStringList getImagesRecursively();
         QStringList getAllImages();
