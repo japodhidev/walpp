@@ -202,3 +202,16 @@ std::set<std::string> Walpp::Image::extractColours(std::string &imagePath, bool 
     return {};
 }
 
+/**
+ * Return
+ * @param imagePath
+ * @return
+ */
+int Walpp::Image::getPixelCount(std::string &imagePath) {
+    Magick::Image image;
+    image.read(imagePath);
+    image.sample("256x256");
+    int count  = image.rows() * image.columns();
+
+    return count;
+}

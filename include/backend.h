@@ -1,18 +1,14 @@
 #ifndef BACKEND_H
 #define BACKEND_H
 
-/*class Base {
-public:
-    static QList<QString> get(QString &img, bool light = false);
-};*/
-
 class Wal {
  public:
      static QList<QString> get(QString &img, bool light = false);
+     static QList<QString> generateColors(std::string &img);
+     static QList<QString> generateColors(std::string &img, int count);
 private:
-    static QByteArray runImageMagick(int colorCount, QString &img, QString &magickCmd);
     static QString hasIM();
-    static QList<QString> generateColors(QString &img);
+    static QByteArray runImageMagick(int colorCount, QString &img, QString &magickCmd);
     static QList<QString> adjust(QList<QString> colors, bool light);
 };
 

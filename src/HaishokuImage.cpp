@@ -1,6 +1,4 @@
 #include "../include/HaishokuImage.h"
-#include "../include/appexception.h"
-#include "../include/image.h"
 #include <sstream>
 #include <curl/curl.h>
 
@@ -37,22 +35,21 @@ Magick::Blob HaishokuImage::downloadImage(const std::string &url) {
  * @param imagePath
  * @return
  */
-std::vector<ColorTuple> HaishokuImage::getColors(const std::string &imagePath) {
+std::vector<ColorTuple> HaishokuImage::getColors(std::string &imagePath) {
     std::vector<ColorTuple> result;
-    auto colors = Walpp::Image::extractColours(const_cast<std::string &>(imagePath), true, false);
+    // auto colors = Walpp::Image::extractColours(const_cast<std::string &>(imagePath), true, false);
+    int pixelCount = Walpp::Image::getPixelCount(imagePath);
+    auto colorList = Wal::generateColors(imagePath, pixelCount);
+    auto listSize = colorList.size();
+    auto colors = Util::strQListToSet(colorList);
+    // FIXME: Count isn't an arbitrary value. It represents how many times a color appears.
+    int count = 0;
 
-    for (const auto &item : colors) {
-        // TODO: Split string by ',' delimiter.
-        QStringList rgbStr = QString::fromStdString(item).split(u',', Qt::SkipEmptyParts);
-        if (rgbStr.size() != 3) {
-            std::string message = "Splitting error.Invalid RGB string values provided!";
-            throw AppException(message);
-        }
-        // TODO: insert the split values into the vector
-        bool ok;
-        std::array<int, 3> rgbArray = {rgbStr.at(0).toInt(&ok), rgbStr.at(1).toInt(&ok), rgbStr.at(2).toInt(&ok)};
-        // FIXME: Dynamically assign the first value
-        result.emplace_back(0, rgbArray);
+    for (auto item : colors) {
+        auto c = Color(item);
+        std::array<int, 3> rgbArray = {c.walColor.red(), c.walColor.green(), c.walColor.blue()};
+        result.emplace_back(count, rgbArray);
+        count++;
     }
 
     return result;

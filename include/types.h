@@ -24,6 +24,7 @@ struct yiq_t {
 };
 
 using ColorTuple = std::tuple<int, std::array<int, 3>>; //(count, RGB)
+using ColorTupleF = std::tuple<float, std::array<int, 3>>; //(count, RGB)
 using GroupedColors = std::array<std::array<std::array<std::vector<ColorTuple>, 3>, 3>, 3>;
 struct RGBMaxInfo {
     int r_min, r_max;

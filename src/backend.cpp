@@ -31,18 +31,20 @@ QString Wal::hasIM() {
 }
 
 /**
+ * TODO: Generate maximum number of colors from image
  * Format the output from Imagemagick into a list of hex colors
  * @brief Wal::generateColors
  * @param img
  * @return
  */
-QList<QString> Wal::generateColors(QString &img) {
+QList<QString> Wal::generateColors(std::string &img) {
     QList<QString> colorList;
     QList<QByteArray> rawColors;
     QString magickCmd = hasIM();
+    QString imgPath = QString::fromStdString(img);
 
     for (int i = 0; i < 20; i++) {
-        rawColors = runImageMagick(16 + i, img, magickCmd).split('\n');
+        rawColors = runImageMagick(16 + i, imgPath, magickCmd).split('\n');
 
         if (rawColors.size() > 16) {
             break;
@@ -71,6 +73,41 @@ QList<QString> Wal::generateColors(QString &img) {
             }
 
         }
+    } else {
+        qDebug() << "There was an error parsing the output from Imagemagick!";
+    }
+    return colorList;
+}
+
+/**
+ * This is an overloaded function.
+ * Generate maximum number of colors from an image.
+ * Format the output from Imagemagick into a list of hex colors
+ * @brief Wal::generateColors
+ * @param img
+ * @return
+ */
+QList<QString> Wal::generateColors(std::string &img, int count) {
+    QList<QString> colorList;
+    QList<QByteArray> rawColors;
+    QString magickCmd = hasIM();
+    QString imgPath = QString::fromStdString(img);
+
+    rawColors = runImageMagick(count, imgPath, magickCmd).split('\n');
+
+    if (rawColors.size() > 1) {
+        QRegularExpression re(R"(#(?:[0-9a-fA-F]{3}){1,2})");
+                foreach (const QByteArray &entry, rawColors) {
+                if (!entry.startsWith("#")) {
+                    QString line(entry);
+                    QRegularExpressionMatch match = re.match(line);
+                    if (match.hasMatch()) {
+                        auto hexColor = match.captured(0);
+                        colorList.append(hexColor);
+                    }
+                }
+
+            }
     } else {
         qDebug() << "There was an error parsing the output from Imagemagick!";
     }
@@ -125,7 +162,8 @@ QList<QString> Wal::adjust(QList<QString> colors, bool light) {
 }
 
 QList<QString> Wal::get(QString &img, bool light) {
-    auto colors = generateColors(img);
+    std::string imgPath = img.toStdString();
+    auto colors = generateColors(imgPath);
 
     return adjust(colors, light);
 }

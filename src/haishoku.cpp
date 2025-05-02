@@ -16,47 +16,110 @@ std::vector<ColorTuple> Haishoku::getColorsMean(std::string &imagePath) {
     for (int i = 0; i < 3; ++i) {
         for (int j = 0; j < 3; ++j) {
             for (int k = 0; k < 3; ++k) {
+                auto t_i = groupedColors[i];
                 auto gColor = groupedColors[i][j][k];
-                if (gColor.empty()) {
+                if (!gColor.empty()) {
                     auto cMean = HaishokuAlgo::getWeightedMean(gColor);
                     colorsMean.push_back(cMean);
                 }
             }
         }
     }
-    // Return 8 of the most prevalent colors
+    // Sort & return 8 of the most prevalent colors
     std::sort(colorsMean.begin(), colorsMean.end(), [](const ColorTuple &a, const ColorTuple &b) {
         return std::get<1>(a) < std::get<1>(b);
     });
 
     if (colorsMean.size() > 8) {
         // TODO: Extract & return the first 8 items
+        colorsMean.resize(8);
     }
 
     return colorsMean;
 }
 
-std::vector<std::tuple<float, int>> Haishoku::getPalette(std::string &imagePath) {
-    auto colorsMean = this->getColorsMean(imagePath);
-    std::vector<std::array<int, 3>> tempPalette;
+/**
+ * @param imagePath
+ */
+std::vector<ColorTupleF> Haishoku::getPalette(std::string &imagePath) {
+    auto colorsMean = getColorsMean(imagePath);
+    std::vector<ColorTuple> tempPalette;
     int countSum = 0;
 
     for (const auto &c : colorsMean) {
         countSum += std::get<0>(c);
-        tempPalette.push_back(std::get<1>(c));
+        // Append the entire tuple
+        tempPalette.push_back(c);
     }
 
     // Calculate the percentage
-    std::vector<std::tuple<float, int>> palette;
+    std::vector<ColorTupleF> plt;
     for (const auto &p : tempPalette) {
-        auto rValue = (float)p[0] / (float)countSum;
-        auto tempValue = std::make_tuple(rValue, p[1]);
-        palette.push_back(tempValue);
+        auto rValue = (float)std::get<0>(p) / (float)countSum;
+        auto tempValue = std::make_tuple(rValue, std::get<1>(p));
+        plt.push_back(tempValue);
     }
 
-    return palette;
+    return plt;
 }
 
-std::string Haishoku::getDominant(std::string &imagePath) {
-    return "";
+std::array<int, 3> Haishoku::getDominant(std::string &imagePath) {
+    auto colorsMean = getColorsMean(imagePath);
+    // Sort in reverse order
+    std::sort(colorsMean.begin(), colorsMean.end(), [](const ColorTuple &a, const ColorTuple &b){
+        return std::get<1>(a) > std::get<1>(b);
+    });
+    // Get the dominant color
+    auto dominantTuple = colorsMean.at(0);
+    auto dom = std::get<1>(dominantTuple);
+
+    return dom;
+}
+
+/**
+ * FIXME: Implement
+ * @param imagePath
+ */
+void Haishoku::showPalette(std::string &imagePath) {}
+
+/**
+ * FIXME: Implement
+ * @param imagePath
+ */
+void Haishoku::showDominant(std::string &imagePath) {}
+
+
+/**
+ * Generate a list of colors extracted from the image in HEX format
+ * @param imagePath
+ * @param light
+ * @return
+ */
+std::vector<std::string> Haishoku::get(std::string &imagePath, bool light) {
+    auto colorPalette = getPalette(imagePath);
+    std::vector<std::string> hexColors;
+    std::vector<yiq_t> yiqColors;
+    for (const auto &ctpl : colorPalette) {
+        auto rgbArray = std::get<1>(ctpl);
+        auto color = QColor::fromRgb(rgbArray[0], rgbArray[1], rgbArray[2]);
+        hexColors.push_back(color.name(QColor::HexRgb).toStdString());
+        rgb_t rgb = {};
+        rgb.red_t = rgbArray[0];
+        rgb.green_t = rgbArray[1];
+        rgb.blue_t = rgbArray[2];
+        yiqColors.push_back(Color::rgbToYiq(rgb));
+    }
+    // TODO: Sort the HEX colors by their YIQ values
+    // TODO: Doubly append the list of sorted colors. The total should be 16 items
+    std::vector<std::string> rawColors;
+    rawColors.insert(rawColors.end(), hexColors.cbegin(), hexColors.cend());
+    rawColors.insert(rawColors.end(), hexColors.cbegin(), hexColors.cend());
+    assert(rawColors.size() == 16);
+    // TODO: Lighten the first color by 0.40
+    Color c;
+    rawColors.at(0) = c.stdLighten(0.40, rawColors.at(0));
+    // TODO: Generic adjust
+    auto colorList = Color::genericAdjust(rawColors, light);
+
+    return colorList;
 }

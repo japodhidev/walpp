@@ -4,6 +4,8 @@
 #include "../include/logging.h"
 #include "../include/settings.h"
 #include "../include/theme.h"
+#include "../include/util.h"
+
 #include <QFile>
 #include <QIODevice>
 #include <QDir>
@@ -347,7 +349,7 @@ QByteArray Util::checkOutput(const QString& command, const QStringList& argument
 }
 
 QList<QString> Util::listBackends() {
-    QList<QString> backends = {"wal"};
+    QList<QString> backends = {"wal", "haishoku"};
 
     return backends;
 }
@@ -402,6 +404,9 @@ QJsonObject Util::colorsToMap(const QList<QString>& colors, QString &img) {
     return result;
 }
 
+/**
+ * Generic color adjustment for themers.
+ */
 QList<QString> Util::genericAdjust(QList<QString> colors, bool light) {
     QString firstColor = colors.at(0);
     Color c0(firstColor);
@@ -470,14 +475,21 @@ QList<QString> Util::cacheFileName(QString &img, QString &backend, bool light, Q
  * @return
  */
 QString Util::getBackend(QString &backend) {
+    QList<QString> backends = listBackends();
     if (backend == "random") {
-        QList<QString> backends = listBackends();
         auto randomIndex = QRandomGenerator(nullptr, backends.size()).generate();
 
         return backends.at(randomIndex);
     }
-    
-    return backend;
+
+    // Find the specified backend & return it. Quit otherwise.
+    if (!backends.contains(backend)) {
+        std::string message = QString("Unsupported backend '%1' provided!").arg(backend).toStdString();
+        throw AppException(message);
+    }
+    auto idx = backends.indexOf(backend);
+
+    return backends.at(idx);
 }
 
 /**
@@ -518,6 +530,15 @@ QJsonObject Util::getColors(QString img, bool light, QString backend, QString ca
     QString cacheFile = joinPath(cacheName.at(0), QStringList() << cacheName.at(1) << cacheName.at(2));
     QFileInfo cFile(cacheFile);
     QJsonObject cs;
+    QList<QString> colorList;
+    bool ok;
+    QString saturation = sat.isEmpty() ? "0" : sat;
+    QList<int> skipIdx;
+    skipIdx.append(0);
+    skipIdx.append(7);
+    skipIdx.append(8);
+    skipIdx.append(15);
+
     if (cFile.isFile()) {
         Logging::info(QString("\033[1;31m%1\033[0m: %2").arg("colors", "Found cached colorscheme."));
         Theme th;
@@ -530,25 +551,48 @@ QJsonObject Util::getColors(QString img, bool light, QString backend, QString ca
         Logging::info(QString("\033[1;31m%1\033[0m: %2").arg("colors", "Generating a colorscheme."));
         QString bEnd = getBackend(backend);
         Logging::info(QString("\033[1;31m%1\033[0m: Using %2 backend.").arg("colors", bEnd));
+
         if (bEnd == "wal") {
-            QList<QString> colorList = Wal::get(img, light);
-            bool ok;
-            QString saturation = sat.isEmpty() ? "0" : sat;
+            colorList = Wal::get(img, light);
             // Only saturate colors 1,2,3,4,5,6,9,10,11,12,13,14
-            for (int i = 0; i < colorList.size(); i++) {
+            /*for (int i = 0; i < colorList.size(); i++) {
                 if (i == 1 | i == 2 | i == 3 | i == 4 | i == 5 | i == 6 | i == 9 | i == 10 | i == 11 | i == 12 | i == 13 | i == 14){
                     // Saturate color
                     colorList.replace(i, Color::c_saturate(saturation.toFloat(&ok), colorList.at(i)));
                 }
-            }
-            cs  = colorsToMap(colorList, img);
-            Util util;
-            QString fPath = cFile.absoluteFilePath();
-            util.saveJSONFile(cs, fPath);
-            Logging::info(QString("\033[1;31m%1\033[0m: %2").arg("colors", "Generation complete."));
+            }*/
+            // Only saturate colors 1,2,3,4,5,6,9,10,11,12,13,14
+            /*for (int i = 0; i < colorList.size(); ++i) {
+                if (!skipIdx.contains(i)) {
+                    colorList.replace(i, Color::c_saturate(saturation.toFloat(&ok), colorList.at(i)));
+                }
+            }*/
+        } else if (bEnd == "haishoku") {
+            // TODO: Generate a palette using haishoku
+            std::string imagePath = img.toStdString();
+            auto cList = Haishoku::get(imagePath, light);
+            colorList = strVectorToQList(cList);
+
+            /*for (int i = 0; i < colorList.size(); ++i) {
+                if (!skipIdx.contains(i)) {
+                    colorList.replace(i, Color::c_saturate(saturation.toFloat(&ok), colorList.at(i)));
+                }
+            }*/
         } else {
-            qDebug() << QString("Unsupported backend - %1").arg(backend);
+            std::string message = QString("Unsupported backend - %1").arg(backend).toStdString();
+            throw AppException(message);
         }
+        // Only saturate colors 1,2,3,4,5,6,9,10,11,12,13,14
+        for (int i = 0; i < colorList.size(); ++i) {
+            if (!skipIdx.contains(i)) {
+                colorList.replace(i, Color::c_saturate(saturation.toFloat(&ok), colorList.at(i)));
+            }
+        }
+        cs  = colorsToMap(colorList, img);
+        Util util;
+        QString fPath = cFile.absoluteFilePath();
+        util.saveJSONFile(cs, fPath);
+        Logging::info(QString("\033[1;31m%1\033[0m: %2").arg("colors", "Generation complete."));
     }
 
     return cs;
@@ -557,4 +601,23 @@ QJsonObject Util::getColors(QString img, bool light, QString backend, QString ca
 int Util::getRandomInt(int min, int max) {
     QRandomGenerator rd;
     return rd.bounded(min, max);
+}
+
+QList<QString> Util::strVectorToQList(std::vector<std::string> &items) {
+    QList<QString> result;
+    for (std::string i : items) {
+        QString i_str = QString::fromStdString(i);
+        result.append(i_str);
+    }
+
+    return result;
+}
+
+std::set<std::string> Util::strQListToSet(QList<QString> &items) {
+    std::set<std::string> result;
+    for (const auto &item : items) {
+        result.insert(item.toStdString());
+    }
+
+    return result;
 }
