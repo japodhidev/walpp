@@ -462,18 +462,18 @@ std::vector<std::string> Color::genericAdjust(std::vector<std::string> colors, b
     if (light) {
         foreach (auto color, colors) {
             Color c(color);
-            color = c.stdSaturate(0.6);
-            color = c.stdDarken(0.5);
+            color = c.stdSaturate(0.6, c.walColor.name(QColor::HexRgb).toStdString());
+            color = c.stdDarken(0.5, c.walColor.name(QColor::HexRgb).toStdString());
         }
 
-        colors.at(7) = c0.stdDarken(0.75);
-        colors.at(0) = c0.stdDarken(0.95);
-        colors.at(8) = c0.stdDarken(0.25);
+        colors.at(7) = c0.stdDarken(0.75, c0.walColor.name(QColor::HexRgb).toStdString());
+        colors.at(0) = c0.stdDarken(0.95, c0.walColor.name(QColor::HexRgb).toStdString());
+        colors.at(8) = c0.stdDarken(0.25, c0.walColor.name(QColor::HexRgb).toStdString());
         colors.at(15) = colors.at(7);
     } else {
-        colors.at(0) = c0.stdDarken(0.80);
-        colors.at(7) = c0.stdDarken(0.75);
-        colors.at(8) = c0.stdDarken(0.25);
+        colors.at(0) = c0.stdDarken(0.80, c0.walColor.name(QColor::HexRgb).toStdString());
+        colors.at(7) = c0.stdDarken(0.75, c0.walColor.name(QColor::HexRgb).toStdString());
+        colors.at(8) = c0.stdDarken(0.25, c0.walColor.name(QColor::HexRgb).toStdString());
         colors.at(15) = colors.at(7);
     }
 
