@@ -16,7 +16,6 @@ std::vector<ColorTuple> Haishoku::getColorsMean(std::string &imagePath) {
     for (int i = 0; i < 3; ++i) {
         for (int j = 0; j < 3; ++j) {
             for (int k = 0; k < 3; ++k) {
-                auto t_i = groupedColors[i];
                 auto gColor = groupedColors[i][j][k];
                 if (!gColor.empty()) {
                     auto cMean = HaishokuAlgo::getWeightedMean(gColor);
@@ -25,15 +24,20 @@ std::vector<ColorTuple> Haishoku::getColorsMean(std::string &imagePath) {
             }
         }
     }
-    // Sort & return 8 of the most prevalent colors
+
     std::sort(colorsMean.begin(), colorsMean.end(), [](const ColorTuple &a, const ColorTuple &b) {
         return std::get<1>(a) < std::get<1>(b);
     });
 
     if (colorsMean.size() > 8) {
-        // TODO: Extract & return the first 8 items
+        // Extract & return the first 8 items
         colorsMean.resize(8);
     }
+
+    // Reverse sort the colors
+    std::sort(colorsMean.begin(), colorsMean.end(), [](const ColorTuple &a, const ColorTuple &b) {
+        return std::get<1>(a) > std::get<1>(b);
+    });
 
     return colorsMean;
 }
@@ -109,16 +113,16 @@ std::vector<std::string> Haishoku::get(std::string &imagePath, bool light) {
         rgb.blue_t = rgbArray[2];
         yiqColors.push_back(Color::rgbToYiq(rgb));
     }
-    // TODO: Sort the HEX colors by their YIQ values
-    // TODO: Doubly append the list of sorted colors. The total should be 16 items
+    // FIXME: Sort the HEX colors by their YIQ values
+    // Doubly append the list of sorted colors. The total should be 16 items
     std::vector<std::string> rawColors;
     rawColors.insert(rawColors.end(), hexColors.cbegin(), hexColors.cend());
     rawColors.insert(rawColors.end(), hexColors.cbegin(), hexColors.cend());
     assert(rawColors.size() == 16);
-    // TODO: Lighten the first color by 0.40
+    // Lighten the first color by 0.40
     Color c;
     rawColors.at(0) = c.stdLighten(0.40, rawColors.at(0));
-    // TODO: Generic adjust
+    // Generic adjust
     auto colorList = Color::genericAdjust(rawColors, light);
 
     return colorList;

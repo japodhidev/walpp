@@ -40,7 +40,7 @@ public:
     static QJsonObject getColors(QString img, bool light = false, QString backend = "wal", QString cacheDir = Setting::CACHE_DIR,  QString sat = "");
     static int getRandomInt(int min, int max);
     static QList<QString> strVectorToQList(std::vector<std::string> &items);
-    static std::set<std::string> strQListToSet(QList<QString> &items);
+    static std::vector<std::string> strQListToVector(QList<QString> &items);
 };
 
 #endif // UTIL_H

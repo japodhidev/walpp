@@ -1,10 +1,10 @@
+#include "../include/util.h"
 #include "../include/appexception.h"
 #include "../include/backend.h"
 #include "../include/color.h"
 #include "../include/logging.h"
 #include "../include/settings.h"
 #include "../include/theme.h"
-#include "../include/util.h"
 
 #include <QFile>
 #include <QIODevice>
@@ -554,30 +554,11 @@ QJsonObject Util::getColors(QString img, bool light, QString backend, QString ca
 
         if (bEnd == "wal") {
             colorList = Wal::get(img, light);
-            // Only saturate colors 1,2,3,4,5,6,9,10,11,12,13,14
-            /*for (int i = 0; i < colorList.size(); i++) {
-                if (i == 1 | i == 2 | i == 3 | i == 4 | i == 5 | i == 6 | i == 9 | i == 10 | i == 11 | i == 12 | i == 13 | i == 14){
-                    // Saturate color
-                    colorList.replace(i, Color::c_saturate(saturation.toFloat(&ok), colorList.at(i)));
-                }
-            }*/
-            // Only saturate colors 1,2,3,4,5,6,9,10,11,12,13,14
-            /*for (int i = 0; i < colorList.size(); ++i) {
-                if (!skipIdx.contains(i)) {
-                    colorList.replace(i, Color::c_saturate(saturation.toFloat(&ok), colorList.at(i)));
-                }
-            }*/
         } else if (bEnd == "haishoku") {
-            // TODO: Generate a palette using haishoku
+            // Generate a palette using haishoku
             std::string imagePath = img.toStdString();
             auto cList = Haishoku::get(imagePath, light);
             colorList = strVectorToQList(cList);
-
-            /*for (int i = 0; i < colorList.size(); ++i) {
-                if (!skipIdx.contains(i)) {
-                    colorList.replace(i, Color::c_saturate(saturation.toFloat(&ok), colorList.at(i)));
-                }
-            }*/
         } else {
             std::string message = QString("Unsupported backend - %1").arg(backend).toStdString();
             throw AppException(message);
@@ -605,7 +586,7 @@ int Util::getRandomInt(int min, int max) {
 
 QList<QString> Util::strVectorToQList(std::vector<std::string> &items) {
     QList<QString> result;
-    for (std::string i : items) {
+    for (std::string &i : items) {
         QString i_str = QString::fromStdString(i);
         result.append(i_str);
     }
@@ -613,10 +594,10 @@ QList<QString> Util::strVectorToQList(std::vector<std::string> &items) {
     return result;
 }
 
-std::set<std::string> Util::strQListToSet(QList<QString> &items) {
-    std::set<std::string> result;
+std::vector<std::string> Util::strQListToVector(QList<QString> &items) {
+    std::vector<std::string> result;
     for (const auto &item : items) {
-        result.insert(item.toStdString());
+        result.push_back(item.toStdString());
     }
 
     return result;

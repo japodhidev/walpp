@@ -37,19 +37,27 @@ Magick::Blob HaishokuImage::downloadImage(const std::string &url) {
  */
 std::vector<ColorTuple> HaishokuImage::getColors(std::string &imagePath) {
     std::vector<ColorTuple> result;
-    // auto colors = Walpp::Image::extractColours(const_cast<std::string &>(imagePath), true, false);
     int pixelCount = Walpp::Image::getPixelCount(imagePath);
     auto colorList = Wal::generateColors(imagePath, pixelCount);
     auto listSize = colorList.size();
-    auto colors = Util::strQListToSet(colorList);
-    // FIXME: Count isn't an arbitrary value. It represents how many times a color appears.
-    int count = 0;
+    auto colors = Util::strQListToVector(colorList);
+    std::map<std::array<int, 3>, int> colorsMap;
 
     for (auto item : colors) {
         auto c = Color(item);
         std::array<int, 3> rgbArray = {c.walColor.red(), c.walColor.green(), c.walColor.blue()};
-        result.emplace_back(count, rgbArray);
-        count++;
+        // Check if the current color is already present
+        if (auto search = colorsMap.find(rgbArray); search != colorsMap.end()) {
+            // If it exists, increase count by one
+            search->second++;
+        } else {
+            // Otherwise, insert it into the map with count = 1
+            colorsMap.insert({rgbArray, 1});
+        }
+    }
+    // Insert values from the map into the result vector
+    for (const auto &[rgb, count] : colorsMap) {
+         result.emplace_back(count, rgb);
     }
 
     return result;
@@ -90,7 +98,7 @@ void HaishokuImage::jointImage(const std::vector<Magick::Image> &images) {
         offset += blockSize.width();
     }
     // TODO: display palette to terminal, definitely!
-    palette.display();
+    // palette.display();
 }
 
 Magick::Image HaishokuImage::newImage(const Magick::Geometry &size, const Magick::Color &color) {
