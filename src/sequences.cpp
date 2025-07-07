@@ -66,7 +66,7 @@ QString Sequences::setColor(int index, QString &hexColor) {
 }
 
 /**
- * FIXME
+ * FIXME: Implement
  * [Sequences::setItermTabColor Set iTerm tab/window color]
  * @param  color [description]
  * @return       [description]

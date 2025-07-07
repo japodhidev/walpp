@@ -10,6 +10,8 @@
 #include <map>
 #include <string>
 #include <vector>
+#include <sstream>
+#include <curl/curl.h>
 #include <Magick++.h>
 
 class HaishokuImage {
@@ -20,7 +22,8 @@ public:
     Magick::Image getThumbnail(Magick::Image image);
     static std::vector<ColorTuple> getColors(std::string& imagePath);
     Magick::Image newImage(const Magick::Geometry& size, const Magick::Color& color);
-    void jointImage(const std::vector<Magick::Image>& images);
+
+    [[maybe_unused]] void jointImage(const std::vector<Magick::Image>& images);
 private:
     static size_t writeCallback(void* contents, size_t size, size_t nmemb, void* userp);
 };

@@ -1,20 +1,4 @@
 #include "../include/util.h"
-#include "../include/appexception.h"
-#include "../include/backend.h"
-#include "../include/color.h"
-#include "../include/logging.h"
-#include "../include/settings.h"
-#include "../include/theme.h"
-
-#include <QFile>
-#include <QIODevice>
-#include <QDir>
-#include <QJsonDocument>
-#include <QProcess>
-#include <QStandardPaths>
-#include <QFileInfo>
-#include <filesystem>
-#include <QRandomGenerator>
 
 Util::Util() = default;
 
@@ -348,6 +332,9 @@ QByteArray Util::checkOutput(const QString& command, const QStringList& argument
     return output;
 }
 
+/**
+ * Maintain a list of supported backends
+ */
 QList<QString> Util::listBackends() {
     QList<QString> backends = {"wal", "haishoku"};
 
@@ -532,19 +519,12 @@ QJsonObject Util::getColors(QString img, bool light, QString backend, QString ca
     QJsonObject cs;
     QList<QString> colorList;
     bool ok;
-    QString saturation = sat.isEmpty() ? "0" : sat;
-    QList<int> skipIdx;
-    skipIdx.append(0);
-    skipIdx.append(7);
-    skipIdx.append(8);
-    skipIdx.append(15);
 
     if (cFile.isFile()) {
         Logging::info(QString("\033[1;31m%1\033[0m: %2").arg("colors", "Found cached colorscheme."));
-        Theme th;
         Color color;
         QString cFilePath = cFile.absoluteFilePath();
-        cs = th.import(cFilePath);
+        cs = Theme::import(cFilePath);
         auto alpha = QJsonValue(color.alphaValue);
         cs.insert("alpha",  alpha);
     } else {
@@ -563,10 +543,20 @@ QJsonObject Util::getColors(QString img, bool light, QString backend, QString ca
             std::string message = QString("Unsupported backend - %1").arg(backend).toStdString();
             throw AppException(message);
         }
-        // Only saturate colors 1,2,3,4,5,6,9,10,11,12,13,14
-        for (int i = 0; i < colorList.size(); ++i) {
-            if (!skipIdx.contains(i)) {
-                colorList.replace(i, Color::c_saturate(saturation.toFloat(&ok), colorList.at(i)));
+        auto satF = sat.toFloat(&ok);
+
+        if (!sat.isEmpty() & (satF <= 1.0)) {
+            QList<int> skipIdx;
+            skipIdx.append(0);
+            skipIdx.append(7);
+            skipIdx.append(8);
+            skipIdx.append(15);
+            // Only saturate colors 1,2,3,4,5,6,9,10,11,12,13,14
+            for (int i = 0; i < colorList.size(); ++i) {
+                if (!skipIdx.contains(i)) {
+                    auto clr = Color::c_saturate(satF, colorList.at(i));
+                    colorList.replace(i, clr);
+                }
             }
         }
         cs  = colorsToMap(colorList, img);
@@ -601,4 +591,102 @@ std::vector<std::string> Util::strQListToVector(QList<QString> &items) {
     }
 
     return result;
+}
+
+/**
+ * Call Imagemagick to generate a scheme
+ * @brief Wal::magickExtractAll
+ * @param colorCount
+ * @param img
+ * @param magickCmd
+ * @return
+ */
+QByteArray Util::runImageMagick(int colorCount, QString &img, QString &magickCmd) {
+    return Util::checkOutput(magickCmd, QStringList() << QString("%1[0]").arg(img) << "-resize" << "25%" << "-colors" << QString("%1").arg(colorCount) << "-unique-colors" << "txt:-");
+}
+
+/**
+ * Extract as much colors as possible from an image using Imagemagick
+ * @param img
+ * @param magickCmd
+ * @return
+ */
+std::vector<std::string> Util::extractMaxColours(std::string &img, std::string magickCmd) {
+    QString imgPath = QString::fromStdString(img);
+    QString cmd = QString::fromStdString(magickCmd);
+    std::vector<std::string> result = {};
+    // Split the output using a '\n' delimiter
+    QList<QByteArray> output = Util::checkOutput(cmd, QStringList() << QString("%1[0]").arg(imgPath) << "-resize" << "256x256" << "txt:-").split('\n');
+
+    if (output.size() > 1) {
+        QRegularExpression re(R"(#(?:[0-9a-fA-F]{3}){1,2})");
+        for (const QByteArray &entry : output) {
+            auto item = QString(entry);
+            // Ignore comments provided by the magick command
+            if (!item.startsWith("#")) {
+                QRegularExpressionMatch match = re.match(item);
+                if (match.hasMatch()) {
+                    auto hexColor = match.captured(0);
+                    result.push_back(hexColor.toStdString());
+                }
+            }
+        }
+    } else {
+        qDebug() << "There was an error parsing the output from Imagemagick!";
+    }
+
+    return result;
+}
+
+/**
+ * Extract as much colors as possible from an image using Pillow
+ * @param img
+ * @return
+ */
+std::vector<ColorTuple> Util::extractMaxColoursPillow(std::string &img) {
+    std::vector<ColorTuple> result;
+    std::string message = "Intentionally quit!";
+    QString imgPath = QString::fromStdString(img);
+    QString cmd = "extract_colors";
+    QByteArray output = Util::checkOutput(cmd, QStringList() << imgPath);
+
+    if (output.size() > 0) {
+        // Structure: [[int, [int, int, int]]]
+        QString outputStr(output);
+        QRegularExpression re(R"(\[(?P<count>\d+)\,\s\[(?P<red>\d+)\,\s(?P<blue>\d+)\,\s(?P<green>\d+))");
+        QRegularExpressionMatchIterator i = re.globalMatch(output);
+
+        while (i.hasNext()) {
+            QRegularExpressionMatch match = i.next();
+            bool ok;
+            int count = match.captured("count").toInt(&ok);
+            int red = match.captured("red").toInt(&ok);
+            int blue = match.captured("blue").toInt(&ok);
+            int green = match.captured("green").toInt(&ok);
+            std::array<int, 3> rgbArray = {red, green, blue};
+            
+            auto tempTuple = std::make_tuple(count, rgbArray);
+            result.push_back(tempTuple);
+        }
+    } else {
+        message = "Empty set of colours extracted from image!";
+        throw AppException(message);
+    }
+    
+    return result;
+}
+
+/**
+ * Check to see if the user has Imagemagick installed
+ * @brief Wal::hasIM
+ * @return
+ */
+QString Util::hasIM() {
+    QString prog = "magick";
+    if (Util::which(prog).contains("magick")) {
+        return prog;
+    }
+
+    std::string message = "Imagemagick wasn't found on your system. Try another backend. (wal --backend)";
+    throw AppException(message);
 }

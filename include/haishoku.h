@@ -12,8 +12,8 @@
 class Haishoku {
 public:
     Haishoku();
-    std::vector<std::string> palette = {};
-    std::array<int, 3> dominant;
+    /*std::vector<std::string> palette = {};
+    std::array<int, 3> dominant;*/
     static std::vector<ColorTupleF> getPalette(std::string &imagePath);
     static std::vector<std::string> get(std::string &imagePath, bool light = false);
 private:

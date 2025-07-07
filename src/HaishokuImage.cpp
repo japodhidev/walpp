@@ -1,6 +1,4 @@
 #include "../include/HaishokuImage.h"
-#include <sstream>
-#include <curl/curl.h>
 
 HaishokuImage::HaishokuImage()  = default;
 
@@ -36,31 +34,8 @@ Magick::Blob HaishokuImage::downloadImage(const std::string &url) {
  * @return
  */
 std::vector<ColorTuple> HaishokuImage::getColors(std::string &imagePath) {
-    std::vector<ColorTuple> result;
-    int pixelCount = Walpp::Image::getPixelCount(imagePath);
-    auto colorList = Wal::generateColors(imagePath, pixelCount);
-    auto listSize = colorList.size();
-    auto colors = Util::strQListToVector(colorList);
-    std::map<std::array<int, 3>, int> colorsMap;
-
-    for (auto item : colors) {
-        auto c = Color(item);
-        std::array<int, 3> rgbArray = {c.walColor.red(), c.walColor.green(), c.walColor.blue()};
-        // Check if the current color is already present
-        if (auto search = colorsMap.find(rgbArray); search != colorsMap.end()) {
-            // If it exists, increase count by one
-            search->second++;
-        } else {
-            // Otherwise, insert it into the map with count = 1
-            colorsMap.insert({rgbArray, 1});
-        }
-    }
-    // Insert values from the map into the result vector
-    for (const auto &[rgb, count] : colorsMap) {
-         result.emplace_back(count, rgb);
-    }
-
-    return result;
+    auto colors = Util::extractMaxColoursPillow(imagePath);
+    return colors;
 }
 
 Magick::Image HaishokuImage::getImage(const std::string &imagePath) {
@@ -84,7 +59,7 @@ Magick::Image HaishokuImage::getThumbnail(Magick::Image image) {
     return image;
 }
 
-void HaishokuImage::jointImage(const std::vector<Magick::Image> &images) {
+[[maybe_unused]] void HaishokuImage::jointImage(const std::vector<Magick::Image> &images) {
     Magick::Geometry blockSize = images.front().size();
     size_t totalWidth = blockSize.width() * images.size();
     size_t height = blockSize.height();

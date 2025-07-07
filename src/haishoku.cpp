@@ -113,12 +113,22 @@ std::vector<std::string> Haishoku::get(std::string &imagePath, bool light) {
         rgb.blue_t = rgbArray[2];
         yiqColors.push_back(Color::rgbToYiq(rgb));
     }
-    // FIXME: Sort the HEX colors by their YIQ values
+    
+    // Sort the HEX colors by their YIQ values
+    std::sort(yiqColors.begin(), yiqColors.end(), [](const yiq_t &a, const yiq_t &b) {
+        // Convert yiq values to arrays and compare
+        std::array<float, 3> first = {a.y_t, a.i_t, a.q_t};
+        std::array<float, 3> second = {b.y_t, b.i_t, b.q_t};
+
+        return first < second;
+    });
+
     // Doubly append the list of sorted colors. The total should be 16 items
     std::vector<std::string> rawColors;
     rawColors.insert(rawColors.end(), hexColors.cbegin(), hexColors.cend());
     rawColors.insert(rawColors.end(), hexColors.cbegin(), hexColors.cend());
     assert(rawColors.size() == 16);
+    
     // Lighten the first color by 0.40
     Color c;
     rawColors.at(0) = c.stdLighten(0.40, rawColors.at(0));

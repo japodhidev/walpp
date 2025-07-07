@@ -164,7 +164,7 @@ void Wallpaper::setWinWallpaper(QString &img) {
 #endif
 
 /**
- * FIXME: FIXME: Implement setting wallpaper in MacOS
+ * FIXME: Implement setting wallpaper in MacOS
  * Set the wallpaper on MacOS
  * @brief Wallpaper::setMacWallpaper
  * @param img

@@ -11,6 +11,7 @@ public:
     Color();
     explicit Color(QString &hexColor);
     explicit Color(std::string &hexColor);
+    explicit Color(const std::string &hexColor);
     QColor walColor;
     double alphaValue = 100;
 

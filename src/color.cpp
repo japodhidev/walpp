@@ -29,6 +29,17 @@ Color::Color(std::string &color) {
     this->walColor = QColor(clr);
 }
 
+Color::Color(const std::string &color) {
+    QString clr = QString::fromStdString(color);
+    bool isValid = QColor::isValidColorName(clr);
+
+    if (!isValid) {
+        std::string message = "Invalid HEX color string: '" + color + "' provided!";
+        throw AppException(message);
+    }
+    this->walColor = QColor(clr);
+}
+
 /**
  * Convert a hex color to rgb
  * @return
@@ -459,21 +470,28 @@ QString Color::c_saturate(float amount, QString color) {
 std::vector<std::string> Color::genericAdjust(std::vector<std::string> colors, bool light) {
     std::string firstColor = colors.at(0);
     Color c0(firstColor);
+    std::string c0Hex = c0.walColor.name(QColor::HexRgb).toStdString();
     if (light) {
-        foreach (auto color, colors) {
+        std::vector<std::string> tempColors;
+        foreach (auto &color, colors) {
+            std::string tempColor;
             Color c(color);
-            color = c.stdSaturate(0.6, c.walColor.name(QColor::HexRgb).toStdString());
-            color = c.stdDarken(0.5, c.walColor.name(QColor::HexRgb).toStdString());
+            tempColor = c.stdSaturate(0.60, c.walColor.name(QColor::HexRgb).toStdString());
+            tempColor = c.stdLighten(0.50, c.walColor.name(QColor::HexRgb).toStdString());
+            tempColors.push_back(tempColor);
         }
 
-        colors.at(7) = c0.stdDarken(0.75, c0.walColor.name(QColor::HexRgb).toStdString());
-        colors.at(0) = c0.stdDarken(0.95, c0.walColor.name(QColor::HexRgb).toStdString());
-        colors.at(8) = c0.stdDarken(0.25, c0.walColor.name(QColor::HexRgb).toStdString());
+        colors = tempColors;
+        Color c1(tempColors.at(0));
+
+        colors.at(0) = c1.stdLighten(0.95);
+        colors.at(7) = c1.stdDarken(0.75);
+        colors.at(8) = c1.stdDarken(0.25);
         colors.at(15) = colors.at(7);
     } else {
-        colors.at(0) = c0.stdDarken(0.80, c0.walColor.name(QColor::HexRgb).toStdString());
-        colors.at(7) = c0.stdDarken(0.75, c0.walColor.name(QColor::HexRgb).toStdString());
-        colors.at(8) = c0.stdDarken(0.25, c0.walColor.name(QColor::HexRgb).toStdString());
+        colors.at(0) = c0.stdDarken(0.80);
+        colors.at(7) = c0.stdLighten(0.75);
+        colors.at(8) = c0.stdLighten(0.25);
         colors.at(15) = colors.at(7);
     }
 

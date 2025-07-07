@@ -114,7 +114,6 @@ void Export::parseTemplate(QMap<QString, QString> &colors, QString &inputFile, Q
     functions["rgb"] = [](const Color& value) {
         return value.rgb();
     };
-    // FIXME: Convert value back to int
    	functions["alpha_dec"] = [](const Color& value) {
         return QString("%1").arg(value.alphaDecimal());
     };

@@ -1,13 +1,29 @@
 #ifndef UTIL_H
 #define UTIL_H
 
+
+#include <filesystem>
+#include <set>
 #include <QString>
 #include <QByteArray>
 #include <QJsonObject>
-#include <set>
+#include <QJsonArray>
+#include <QFile>
+#include <QIODevice>
+#include <QDir>
+#include <QJsonDocument>
+#include <QProcess>
+#include <QStandardPaths>
+#include <QFileInfo>
+#include <QRandomGenerator>
+#include "appexception.h"
+#include "backend.h"
+#include "color.h"
 #include "haishoku.h"
+#include "logging.h"
 #include "settings.h"
-
+#include "theme.h"
+#include "util.h"
 
 class Util
 {
@@ -41,6 +57,10 @@ public:
     static int getRandomInt(int min, int max);
     static QList<QString> strVectorToQList(std::vector<std::string> &items);
     static std::vector<std::string> strQListToVector(QList<QString> &items);
+    static QByteArray runImageMagick(int colorCount, QString &img, QString &magickCmd);
+    static std::vector<std::string> extractMaxColours(std::string &img, std::string magickCmd);
+    static std::vector<ColorTuple> extractMaxColoursPillow(std::string &img);
+    static QString hasIM();
 };
 
 #endif // UTIL_H
