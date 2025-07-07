@@ -391,9 +391,52 @@ QString Color::saturateColor(double amount) const {
  */
 yiq_t Color::rgbToYiq(rgb_t &color) {
     yiq_t result{};
-    result.y_t = 0.30 * color.red_t + 0.59 * color.green_t + 0.11 * color.blue_t;
+    result.y_t = (0.30 * color.red_t) + (0.59 * color.green_t) + (0.11 * color.blue_t);
     result.i_t = 0.74 * (color.red_t - result.y_t) - 0.27 * (color.blue_t - result.y_t);
     result.q_t = 0.48 * (color.red_t - result.y_t) - 0.41 * (color.blue_t - result.y_t);
+
+    return result;
+}
+
+/**
+ * Convert YIQ color value to RGB
+ * @param  color [description]
+ * @return rgb_t
+ */
+rgb_t Color::yiqToRGB(yiq_t &color) {
+    double r, g, b;
+    r = color.y_t + 0.9468822170900693 * color.i_t + 0.6235565819861433 * color.q_t;
+    g = color.y_t - 0.27478764629897834 * color.i_t - 0.6356910791873801 * color.q_t;
+    b = color.y_t - 1.1085450346420322 * color.i_t + 1.7090069284064666 * color.q_t;
+
+    /*if (r < 0.0) {
+        r = 0.0;
+    }
+
+    if (g < 0.0) {
+        g = 0.0;
+    }
+
+    if (b < 0.0) {
+        b = 0.0;
+    }
+
+    if (r > 1.0) {
+        r = 1.0;
+    }
+
+    if (g > 1.0) {
+        g = 1.0;
+    }
+
+    if (b > 1.0) {
+        b = 1.0;
+    }*/
+
+    rgb_t result;
+    result.red_t = r;
+    result.green_t = g;
+    result.blue_t = b;
 
     return result;
 }
