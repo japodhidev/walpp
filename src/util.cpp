@@ -310,6 +310,7 @@ void Util::run(const QString& command, QStringList &args) {
     process.setStandardInputFile(QProcess::nullDevice());
     process.setProgram(command);
     process.setArguments(args);
+    process.start();
     process.waitForFinished(-1);
 }
 
@@ -325,11 +326,15 @@ QByteArray Util::checkOutput(const QString& command, const QStringList& argument
     process.setStandardErrorFile(QProcess::nullDevice());
     process.setStandardInputFile(QProcess::nullDevice());
     process.start(command, arguments);
-    process.waitForFinished(-1);
+    bool finished = process.waitForFinished(-1);
 
+    if (!finished) {
+        std::string message = QString("Couldn't finish the program '%1'!").arg(command).toStdString();
+        throw AppException(message);
+    }
     QByteArray output = process.readAllStandardOutput();
-
     return output;
+
 }
 
 /**
@@ -651,7 +656,7 @@ std::vector<ColorTuple> Util::extractMaxColoursPillow(std::string &img) {
     QString cmd = "/home/sleek/.local/bin/extract_colors";
     // FIXME: Running a Python script doesn't seem to provide the output from stdout.
     // Write to & then read from /tmp/colors.txt
-    // QByteArray output = Util::checkOutput(cmd, QStringList() << imgPath);
+     // QByteArray output = Util::checkOutput(cmd, QStringList() << imgPath);
     Util::run(cmd, QStringList() << imgPath);
     QString colorFile = "/tmp/colors.txt";
     auto output = Util::readFile(colorFile);
