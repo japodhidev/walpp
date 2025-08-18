@@ -653,7 +653,8 @@ std::vector<ColorTuple> Util::extractMaxColoursPillow(std::string &img) {
     if (output.size() > 0) {
         // Structure: [[int, [int, int, int]]]
         QString outputStr(output);
-        QRegularExpression re(R"(\[(?P<count>\d+)\,\s\[(?P<red>\d+)\,\s(?P<blue>\d+)\,\s(?P<green>\d+))");
+        // Extract colors from an array of the structure: [count, [red, green, blue]]
+        QRegularExpression re(R"(\[(?P<count>\d+)\,\s\[(?P<red>\d+)\,\s(?P<green>\d+)\,\s(?P<blue>\d+))");
         QRegularExpressionMatchIterator i = re.globalMatch(output);
 
         while (i.hasNext()) {
@@ -661,8 +662,8 @@ std::vector<ColorTuple> Util::extractMaxColoursPillow(std::string &img) {
             bool ok;
             int count = match.captured("count").toInt(&ok);
             int red = match.captured("red").toInt(&ok);
-            int blue = match.captured("blue").toInt(&ok);
             int green = match.captured("green").toInt(&ok);
+            int blue = match.captured("blue").toInt(&ok);
             std::array<int, 3> rgbArray = {red, green, blue};
             
             auto tempTuple = std::make_tuple(count, rgbArray);
