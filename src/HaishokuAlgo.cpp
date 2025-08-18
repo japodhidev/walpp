@@ -56,22 +56,27 @@ RGBMaxInfo HaishokuAlgo::rgbMaximum(const std::vector<ColorTuple> &colors) {
     auto g_sorted = colors;
     auto b_sorted = colors;
 
+    // Sort the colors using the first (red) element
     std::sort(r_sorted.begin(), r_sorted.end(), [](const ColorTuple &a, const ColorTuple &b) {
-        return std::get<1>(a) < std::get<1>(b);
+        return std::get<1>(a)[0] < std::get<1>(b)[0];
     });
 
+    // Sort the colors using the second (green) element
     std::sort(g_sorted.begin(), g_sorted.end(), [](const ColorTuple &a, const ColorTuple &b) {
-        return std::get<1>(a) < std::get<1>(b);
+        return std::get<1>(a)[1] < std::get<1>(b)[1];
     });
 
+    // Sort the colors using the third (blue) element
     std::sort(b_sorted.begin(), b_sorted.end(), [](const ColorTuple &a, const ColorTuple &b) {
-        return std::get<1>(a) < std::get<1>(b);
+        return std::get<1>(a)[2] < std::get<1>(b)[2];
     });
 
+    // Pick the minimum value for each color
     int r_min = std::get<1>(r_sorted.front())[0];
     int g_min = std::get<1>(g_sorted.front())[0];
     int b_min = std::get<1>(b_sorted.front())[0];
 
+    // Pick the maximum value for each color
     int r_max = std::get<1>(r_sorted.back())[0];
     int g_max = std::get<1>(g_sorted.back())[0];
     int b_max = std::get<1>(b_sorted.back())[0];

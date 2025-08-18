@@ -305,12 +305,12 @@ void Util::pOpen(const QString& command, const QStringList& args) {
  */
 void Util::run(const QString& command, QStringList &args) {
     QProcess process;
-    process.setStandardOutputFile(QProcess::nullDevice());
+//    process.setStandardOutputFile(QProcess::nullDevice());
     process.setStandardErrorFile(QProcess::nullDevice());
     process.setStandardInputFile(QProcess::nullDevice());
     process.setProgram(command);
     process.setArguments(args);
-    process.waitForFinished();
+    process.waitForFinished(-1);
 }
 
 /**
@@ -624,7 +624,8 @@ std::vector<std::string> Util::extractMaxColours(std::string &img, std::string m
             auto item = QString(entry);
             // Ignore comments provided by the magick command
             if (!item.startsWith("#")) {
-                QRegularExpressionMatch match = re.match(item);
+                // QRegularExpressionMatch match = re.match(item);
+                auto match = re.match(item);
                 if (match.hasMatch()) {
                     auto hexColor = match.captured(0);
                     result.push_back(hexColor.toStdString());
@@ -647,15 +648,21 @@ std::vector<ColorTuple> Util::extractMaxColoursPillow(std::string &img) {
     std::vector<ColorTuple> result;
     std::string message = "Intentionally quit!";
     QString imgPath = QString::fromStdString(img);
-    QString cmd = "extract_colors";
-    QByteArray output = Util::checkOutput(cmd, QStringList() << imgPath);
+    QString cmd = "/home/sleek/.local/bin/extract_colors";
+    // FIXME: Running a Python script doesn't seem to provide the output from stdout.
+    // Write to & then read from /tmp/colors.txt
+    // QByteArray output = Util::checkOutput(cmd, QStringList() << imgPath);
+    Util::run(cmd, QStringList() << imgPath);
+    QString colorFile = "/tmp/colors.txt";
+    auto output = Util::readFile(colorFile);
 
     if (output.size() > 0) {
         // Structure: [[int, [int, int, int]]]
         QString outputStr(output);
         // Extract colors from an array of the structure: [count, [red, green, blue]]
         QRegularExpression re(R"(\[(?P<count>\d+)\,\s\[(?P<red>\d+)\,\s(?P<green>\d+)\,\s(?P<blue>\d+))");
-        QRegularExpressionMatchIterator i = re.globalMatch(output);
+        // QRegularExpressionMatchIterator i = re.globalMatch(outputStr);
+        auto i = re.globalMatch(outputStr);
 
         while (i.hasNext()) {
             QRegularExpressionMatch match = i.next();
