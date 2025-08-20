@@ -18,9 +18,9 @@ struct hls_t {
 };
 
 struct yiq_t {
-    float y_t;
-    float i_t;
-    float q_t;
+    double y_t;
+    double i_t;
+    double q_t;
 };
 
 using ColorTuple = std::tuple<int, std::array<int, 3>>; //(count, RGB)

@@ -37,8 +37,8 @@ public:
     static QString c_saturate(float amount, QString color = QString(""));
     static QList<QString> saturateMultiple(QList<QString> &colors, float amount);
     static QString blendColor(QString &color, QString &otherColor);
-    static yiq_t rgbToYiq(rgb_t &color);
-    static rgb_t yiqToRGB(yiq_t &color);
+    static yiq_t rgbToYiq(rgb_t color);
+    static rgb_t yiqToRGB(yiq_t color);
     static std::vector<std::string> genericAdjust(std::vector<std::string>, bool light = false);
 private:
     QString hexToXRgba() const;
