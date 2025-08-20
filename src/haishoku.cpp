@@ -1,6 +1,7 @@
 #include "../include/haishoku.h"
 #include "../include/HaishokuImage.h"
 #include "../include/HaishokuAlgo.h"
+#include <cstdio>
 
 Haishoku::Haishoku()  = default;
 
@@ -102,47 +103,53 @@ void Haishoku::showDominant(std::string &imagePath) {}
 std::vector<std::string> Haishoku::get(std::string &imagePath, bool light) {
     auto colorPalette = getPalette(imagePath);
     std::vector<std::string> altResult;
-    // std::vector<yiq_t> yiqColors;
+    std::vector<std::string> rawColors;
+    std::vector<yiq_t> yiqColors;
+    Color c;
+    bool test = true;
     for (const auto &ctpl : colorPalette) {
         auto rgbArray = std::get<1>(ctpl);
         rgb_t rgb = {};
         rgb.red_t = rgbArray[0];
         rgb.green_t = rgbArray[1];
         rgb.blue_t = rgbArray[2];
-        // yiqColors.push_back(Color::rgbToYiq(rgb));
+        auto yColor = Color::rgbToYiq(rgb);
+        yiqColors.push_back(yColor);
         QColor color = QColor::fromRgb(rgb.red_t, rgb.green_t, rgb.blue_t);
         altResult.push_back(color.name(QColor::HexRgb).toStdString());
     }
+
+    if (test) {
+        // Sort the HEX colors by their YIQ values
+        std::sort(yiqColors.begin(), yiqColors.end(), [](const yiq_t &a, const yiq_t &b) {
+            // Convert yiq values to arrays and compare
+            std::array<double, 3> first = {a.y_t, a.i_t, a.q_t};
+            std::array<double, 3> second = {b.y_t, b.i_t, b.q_t};
+
+            return first < second;
+        });
+
+        // Convert the sorted YIQ colors back to RGB
+        std::vector<std::string> sortedHexColors;
+        for (yiq_t entry : yiqColors) {
+            rgb_t tempRgb = Color::yiqToRGB(entry);
+            auto color = QColor::fromRgb(tempRgb.red_t, tempRgb.green_t, tempRgb.blue_t);
+            sortedHexColors.push_back(color.name(QColor::HexRgb).toStdString());
+        }
+        rawColors.insert(rawColors.end(), sortedHexColors.cbegin(), sortedHexColors.cend());
+        rawColors.insert(rawColors.end(), sortedHexColors.cbegin(), sortedHexColors.cend());
+        // Lighten the first color by 0.40
+        rawColors.at(0) = Color::lightenColor(0.40, sortedHexColors.at(0));
+    } else {
+        // Doubly append the list of sorted colors. The total should be 16 items
+        rawColors.insert(rawColors.end(), altResult.cbegin(), altResult.cend());
+        rawColors.insert(rawColors.end(), altResult.cbegin(), altResult.cend());    
+        // Lighten the first color by 0.40
+        rawColors.at(0) = Color::lightenColor(0.40, altResult.at(0));
+    }
     
-    // Sort the HEX colors by their YIQ values
-    /*std::sort(yiqColors.begin(), yiqColors.end(), [](const yiq_t &a, const yiq_t &b) {
-        // Convert yiq values to arrays and compare
-        std::array<float, 3> first = {a.y_t, a.i_t, a.q_t};
-        std::array<float, 3> second = {b.y_t, b.i_t, b.q_t};
-
-        return first < second;
-    });*/
-
-    // Use the sorted YIQ colors moving forward
-    /*std::vector<std::string> sortedHexColors;
-    for (yiq_t entry : yiqColors) {
-        rgb_t tempRgb = Color::yiqToRGB(entry);
-        auto color = QColor::fromRgb(tempRgb.red_t, tempRgb.green_t, tempRgb.blue_t);
-        sortedHexColors.push_back(color.name(QColor::HexRgb).toStdString());
-    }*/
-
-    // Doubly append the list of sorted colors. The total should be 16 items
-    std::vector<std::string> rawColors;
-    // rawColors.insert(rawColors.end(), sortedHexColors.cbegin(), sortedHexColors.cend());
-    // rawColors.insert(rawColors.end(), sortedHexColors.cbegin(), sortedHexColors.cend());
-    rawColors.insert(rawColors.end(), altResult.cbegin(), altResult.cend());
-    rawColors.insert(rawColors.end(), altResult.cbegin(), altResult.cend());
     assert(rawColors.size() >= 16);
     
-    // Lighten the first color by 0.40
-    Color c;
-    // rawColors.at(0) = c.stdLighten(0.40, sortedHexColors.at(0));
-    rawColors.at(0) = c.stdLighten(0.40, altResult.at(0));
     // Generic adjust
     auto colorList = Color::genericAdjust(rawColors, light);
 

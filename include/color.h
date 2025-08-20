@@ -30,8 +30,9 @@ public:
     QString blue() const;
     QString lighten(float amount, QString color = QString("")) const;
     std::string stdLighten(float amount, std::string color = "") const;
+    static std::string lightenColor(float amount, std::string color);
     QString darken(float amount, QString color = QString("")) const;
-    std::string stdDarken(float amount, std::string color = "") const;
+    static std::string stdDarken(float amount, std::string color);
     QString saturate(float amount, QString color = QString("")) const;
     std::string stdSaturate(float amount, std::string color = "") const;
     static QString c_saturate(float amount, QString color = QString(""));
@@ -40,11 +41,11 @@ public:
     static yiq_t rgbToYiq(rgb_t color);
     static rgb_t yiqToRGB(yiq_t color);
     static std::vector<std::string> genericAdjust(std::vector<std::string>, bool light = false);
+    static QColor validateColorStr(std::string &color);
 private:
     QString hexToXRgba() const;
     QString saturateColor(double amount) const;
     static QColor validateColorStr(QString &color);
-    static QColor validateColorStr(std::string &color);
 };
 
 #endif // COLOR_H

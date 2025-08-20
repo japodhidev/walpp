@@ -42,9 +42,15 @@ GroupedColors HaishokuAlgo::groupByAccuracy(const std::vector<ColorTuple> &color
         int g = std::get<1>(color)[1];
         int b = std::get<1>(color)[2];
 
-        int r_idx = (r < info.r_min + info.r_value) ? 0 : (r < info.r_min + 2 * info.r_value) ? 1 : 2;
-        int g_idx = (g < info.g_min + info.g_value) ? 0 : (r < info.g_min + 2 * info.g_value) ? 1 : 2;
-        int b_idx = (b < info.b_min + info.b_value) ? 0 : (r < info.b_min + 2 * info.b_value) ? 1 : 2;
+        // int r_idx = (r < info.r_min + info.r_value) ? 0 : (r < info.r_min + 2 * info.r_value) ? 1 : 2;
+        int r_idx = 2;
+        if (r < (info.r_min + info.r_value)) {
+            r_idx = 0;
+        } else if (r < (info.r_min + info.r_value * 2)) {
+            r_idx = 1;
+        }
+        int g_idx = (g < info.g_min + info.g_value) ? 0 : (r < info.g_min + info.g_value * 2) ? 1 : 2;
+        int b_idx = (b < info.b_min + info.b_value) ? 0 : (r < info.b_min + info.b_value * 2) ? 1 : 2;
         rgbGroups[r_idx][g_idx][b_idx].push_back(color);
     }
 
@@ -91,6 +97,9 @@ RGBMaxInfo HaishokuAlgo::rgbMaximum(const std::vector<ColorTuple> &colors) {
     };
 }
 
+/**
+ * Sort ColorTuple values by the second element (RGB)
+ */
 std::vector<ColorTuple> HaishokuAlgo::sortByRGB(const std::vector<ColorTuple> &colors) {
     std::vector<ColorTuple> sorted = colors;
     std::sort(sorted.begin(), sorted.end(), [](const ColorTuple &a, const ColorTuple &b) {

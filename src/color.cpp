@@ -210,15 +210,55 @@ std::string Color::stdLighten(float amount, std::string color) const {
         std::string message = QString("Invalid amount: '%1' provided. Amount should be a value between 0-1.0").arg(amount).toStdString();
         throw AppException(message);
     }
-    float per100 = (amount * 100) + 100;
+    float factor = (amount * 100) + 100;
     QColor lighterColor;
 
     if (color.size() == 0) {
-        lighterColor = this->walColor.lighter(per100);
+        lighterColor = this->walColor.lighter(factor);
     } else {
         QColor c = validateColorStr(color);
-        lighterColor = c.lighter(per100);
+        lighterColor = c.lighter(factor);
     }
+
+    std::string result = lighterColor.name(QColor::HexRgb).toStdString();
+
+    return result;
+}
+
+/**
+ * Lighten color by the provided amount
+ * @param  amount [A number between 0-1.0]
+ * @param  color  [Valid HEX color string]
+ * @return        [A HEX representation of the resulting lighter color]
+ */
+std::string Color::lightenColor(float amount, std::string color) {
+    if (amount > 1.0 | amount < 0) {
+        std::string message = QString("Invalid amount: '%1' provided. Amount should be a value between 0-1.0").arg(amount).toStdString();
+        throw AppException(message);
+    }
+
+    if (color.empty()) {
+        std::string message = "[L] Empty colour value provided. Exiting!";
+        throw AppException(message);
+    }
+
+    QColor c = Color::validateColorStr(color);
+
+    /*double factor = (amount * 100) + 100;
+    QColor lighterColor = c.lighter(factor);
+
+    std::string colorName = lighterColor.name(QColor::HexRgb).toStdString();
+
+    qDebug() << "[L]Before: " << color << "\tAfter" << colorName << "\tFactor: " << factor;
+
+    return colorName;*/
+    // TODO: Convert hex color string to RGB values
+    // Lighten: r/g/b + (255 - r/g/b) * amount
+    double red = c.redF() + (255 - c.redF()) * amount;
+    double green = c.greenF() + (255 - c.greenF()) * amount;
+    double blue = c.blueF() + (255 - c.blueF()) * amount;
+
+    QColor lighterColor = QColor::fromRgbF(red, green, blue);
 
     return lighterColor.name(QColor::HexRgb).toStdString();
 }
@@ -249,20 +289,27 @@ QString Color::darken(float amount, QString color) const {
  * Darken color by percent.
  * @return
  */
-std::string Color::stdDarken(float amount, std::string color) const {
+std::string Color::stdDarken(float amount, std::string color) {
     if (amount > 1.0 | amount < 0) {
         std::string message = QString("Invalid amount: '%1' provided. Amount should be a value between 0-1.0").arg(amount).toStdString();
         throw AppException(message);
     }
-    float per100 = amount * 1000;
-    QColor darkerColor;
 
-    if (color.size() == 0) {
-        darkerColor = this->walColor.darker(per100);
-    } else {
-        QColor c = validateColorStr(color);
-        darkerColor = c.darker(per100);
+    if (color.empty()) {
+        std::string message = "[D] Empty colour value provided. Exiting!";
+        throw AppException(message);
     }
+
+    QColor c = validateColorStr(color);
+    // float factor = amount * 1000;
+    // darkerColor = c.darker(factor);
+    // Multiply each of the color's RGB values by 1 - amount
+    double red = c.redF() * (1 - amount);
+    double green = c.greenF() * (1 - amount);
+    double blue = c.blueF() * (1 - amount);
+    // TODO: Convert RGB values to hex
+
+    QColor darkerColor = QColor::fromRgbF(red, green, blue);
 
     return darkerColor.name(QColor::HexRgb).toStdString();
 }
@@ -482,30 +529,33 @@ QString Color::c_saturate(float amount, QString color) {
  * Generic color adjustment for themers.
  */
 std::vector<std::string> Color::genericAdjust(std::vector<std::string> colors, bool light) {
-    std::string firstColor = colors.at(0);
-    Color c0(firstColor);
-    std::string c0Hex = c0.walColor.name(QColor::HexRgb).toStdString();
     if (light) {
         std::vector<std::string> tempColors;
+        // Saturate & darken each color by a factor 0.60 & 0.50 respectively
         foreach (auto &color, colors) {
             std::string tempColor;
             Color c(color);
-            tempColor = c.stdSaturate(0.60, c.walColor.name(QColor::HexRgb).toStdString());
-            tempColor = c.stdLighten(0.50, c.walColor.name(QColor::HexRgb).toStdString());
+            tempColor = c.saturate(0.60, c.walColor.name(QColor::HexRgb)).toStdString();
+            // tempColor = stdDarken(0.50, c.walColor.name(QColor::HexRgb).toStdString());
             tempColors.push_back(tempColor);
         }
 
         colors = tempColors;
-        Color c1(tempColors.at(0));
-
-        colors.at(0) = c1.stdLighten(0.95);
-        colors.at(7) = c1.stdDarken(0.75);
-        colors.at(8) = c1.stdDarken(0.25);
+        Color c0(tempColors.at(0));
+        std::string c1Hex = c0.walColor.name(QColor::HexRgb).toStdString();
+        auto lColor = lightenColor(0.95, tempColors.at(0));
+        colors.at(0) = lColor;
+        colors.at(7) = stdDarken(0.75, lColor);
+        colors.at(8) = stdDarken(0.25, lColor);
         colors.at(15) = colors.at(7);
     } else {
-        colors.at(0) = c0.stdDarken(0.80);
-        colors.at(7) = c0.stdLighten(0.75);
-        colors.at(8) = c0.stdLighten(0.25);
+        std::string firstColor = colors.at(0);
+        Color c0(firstColor);
+        std::string color0Hex = c0.walColor.name(QColor::HexRgb).toStdString();
+        std::string darkerColor0 = stdDarken(0.80, color0Hex);
+        colors.at(0) = stdDarken(0.80, darkerColor0);
+        colors.at(7) = lightenColor(0.75, darkerColor0);
+        colors.at(8) = lightenColor(0.25, darkerColor0);
         colors.at(15) = colors.at(7);
     }
 
