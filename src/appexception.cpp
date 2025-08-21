@@ -5,7 +5,6 @@
 
 AppException::AppException(std::string &message) {
     errorMessage = message;
-    QTextStream out(stdout);
-    out << QString::fromStdString(errorMessage) << Qt::endl;
+    Logging::exception(QString::fromStdString(errorMessage));
     std::exit(EXIT_FAILURE);
 }

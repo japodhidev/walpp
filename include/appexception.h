@@ -2,6 +2,7 @@
 #define APPEXCEPTION_H
 
 #include <QException>
+#include "logging.h"
 
 
 class AppException: public QException {
