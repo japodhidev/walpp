@@ -244,21 +244,14 @@ std::string Color::lightenColor(float amount, std::string color) {
 
     QColor c = Color::validateColorStr(color);
 
-    /*double factor = (amount * 100) + 100;
-    QColor lighterColor = c.lighter(factor);
-
-    std::string colorName = lighterColor.name(QColor::HexRgb).toStdString();
-
-    qDebug() << "[L]Before: " << color << "\tAfter" << colorName << "\tFactor: " << factor;
-
-    return colorName;*/
     // TODO: Convert hex color string to RGB values
     // Lighten: r/g/b + (255 - r/g/b) * amount
-    double red = c.redF() + (255 - c.redF()) * amount;
-    double green = c.greenF() + (255 - c.greenF()) * amount;
-    double blue = c.blueF() + (255 - c.blueF()) * amount;
+    int red = c.red() + (255 - c.red()) * amount;
+    int green = c.green() + (255 - c.green()) * amount;
+    int blue = c.blue() + (255 - c.blue()) * amount;
 
-    QColor lighterColor = QColor::fromRgbF(red, green, blue);
+    QColor lighterColor = QColor::fromRgb(red, green, blue);
+
 
     return lighterColor.name(QColor::HexRgb).toStdString();
 }
@@ -536,7 +529,7 @@ std::vector<std::string> Color::genericAdjust(std::vector<std::string> colors, b
             std::string tempColor;
             Color c(color);
             tempColor = c.saturate(0.60, c.walColor.name(QColor::HexRgb)).toStdString();
-            // tempColor = stdDarken(0.50, c.walColor.name(QColor::HexRgb).toStdString());
+            tempColor = stdDarken(0.50, c.walColor.name(QColor::HexRgb).toStdString());
             tempColors.push_back(tempColor);
         }
 
@@ -553,7 +546,7 @@ std::vector<std::string> Color::genericAdjust(std::vector<std::string> colors, b
         Color c0(firstColor);
         std::string color0Hex = c0.walColor.name(QColor::HexRgb).toStdString();
         std::string darkerColor0 = stdDarken(0.80, color0Hex);
-        colors.at(0) = stdDarken(0.80, darkerColor0);
+        colors.at(0) = darkerColor0;
         colors.at(7) = lightenColor(0.75, darkerColor0);
         colors.at(8) = lightenColor(0.25, darkerColor0);
         colors.at(15) = colors.at(7);

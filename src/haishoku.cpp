@@ -106,7 +106,7 @@ std::vector<std::string> Haishoku::get(std::string &imagePath, bool light) {
     std::vector<std::string> rawColors;
     std::vector<yiq_t> yiqColors;
     Color c;
-    bool test = true;
+    bool test = false;
     for (const auto &ctpl : colorPalette) {
         auto rgbArray = std::get<1>(ctpl);
         rgb_t rgb = {};

@@ -4,7 +4,7 @@ HaishokuAlgo::HaishokuAlgo() = default;
 
 ColorTuple HaishokuAlgo::getWeightedMean(const std::vector<ColorTuple> &group) {
     int sigmaCount = 0;
-    long long sigma_r = 0, sigma_g = 0, sigma_b = 0;
+    double sigma_r = 0, sigma_g = 0, sigma_b = 0;
 
     for (const auto &item : group) {
         int count = std::get<0>(item);
