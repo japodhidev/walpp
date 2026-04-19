@@ -13,7 +13,9 @@ public:
     explicit Color(std::string &hexColor);
     explicit Color(const std::string &hexColor);
     QColor walColor;
-    double alphaValue = 100;
+    // Class-wide alpha (matches pywal's util.Color.alpha_num). Set once from
+    // the CLI `--alpha` flag and read by all JSON writers / sequence emitters.
+    static double alphaValue;
 
     QString rgb() const;
     QString xrgba();

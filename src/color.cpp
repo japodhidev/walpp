@@ -6,9 +6,11 @@
 #include <QIODevice>
 #include <QtGui/QColor>
 
+double Color::alphaValue = 100.0;
+
 Color::Color() = default;
 
-Color::Color(QString &color) {    
+Color::Color(QString &color) {
     bool isValid = QColor::isValidColorName(color);
 
     if (!isValid) {
@@ -179,25 +181,21 @@ QString Color::blue() const {
 }
 
 /**
- * Lighten color by percent.
- * @return
+ * Lighten color by the given fraction (0.0 - 1.0). Per-channel, matches
+ * pywal's util.lighten_color: rgb[i] + (255 - rgb[i]) * amount.
  */
 QString Color::lighten(float amount, QString color) const {
-    if (amount > 1.0 | amount < 0) {
+    if (amount > 1.0f || amount < 0.0f) {
         std::string message = QString("Invalid amount: '%1' provided. Amount should be a value between 0-1.0").arg(amount).toStdString();
         throw AppException(message);
     }
-    float per100 = (amount * 100) + 100;
-    QColor lighterColor;
 
-    if (color.isEmpty()) {
-        lighterColor = this->walColor.lighter(per100);
-    } else {
-        QColor c = validateColorStr(color);
-        lighterColor = c.lighter(per100);
-    }
+    QColor c = color.isEmpty() ? this->walColor : validateColorStr(color);
+    int red   = c.red()   + static_cast<int>((255 - c.red())   * amount);
+    int green = c.green() + static_cast<int>((255 - c.green()) * amount);
+    int blue  = c.blue()  + static_cast<int>((255 - c.blue())  * amount);
 
-    return lighterColor.name(QColor::HexRgb);
+    return QColor::fromRgb(red, green, blue).name(QColor::HexRgb);
 }
 
 
@@ -257,25 +255,21 @@ std::string Color::lightenColor(float amount, std::string color) {
 }
 
 /**
- * Darken color by percent.
- * @return
+ * Darken color by the given fraction (0.0 - 1.0). Per-channel, matches
+ * pywal's util.darken_color: rgb[i] * (1 - amount).
  */
 QString Color::darken(float amount, QString color) const {
-    if (amount > 1.0 | amount < 0) {
+    if (amount > 1.0f || amount < 0.0f) {
         std::string message = QString("Invalid amount: '%1' provided. Amount should be a value between 0-1.0").arg(amount).toStdString();
         throw AppException(message);
     }
-    float per100 = amount * 1000;
-    QColor darkerColor;
 
-    if (color.isEmpty()) {
-        darkerColor = this->walColor.darker(per100);
-    } else {
-        QColor c = validateColorStr(color);
-        darkerColor = c.darker(per100);
-    }
+    QColor c = color.isEmpty() ? this->walColor : validateColorStr(color);
+    int red   = static_cast<int>(c.red()   * (1.0f - amount));
+    int green = static_cast<int>(c.green() * (1.0f - amount));
+    int blue  = static_cast<int>(c.blue()  * (1.0f - amount));
 
-    return darkerColor.name(QColor::HexRgb);
+    return QColor::fromRgb(red, green, blue).name(QColor::HexRgb);
 }
 
 /**
@@ -505,15 +499,14 @@ QList<QString> Color::saturateMultiple(QList<QString> &colors, float amount) {
 }
 
 /**
- * Saturate a hex color
- * @param amount
- * @param color
- * @return
+ * Saturate a hex color. Matches pywal's util.saturate_color: convert RGB to
+ * HLS, set saturation = amount, convert back. Qt's fromHslF takes (h, s, l).
  */
 QString Color::c_saturate(float amount, QString color) {
     QColor colour = validateColorStr(color);
-    float saturation = std::min(colour.saturationF() * (1 + amount), 1.0f);
-    QColor hslColour = QColor::fromHslF(colour.hueF(), saturation, colour.lightnessF());
+    qreal hue = colour.hslHueF();
+    if (hue < 0.0) hue = 0.0; // achromatic colors return -1 in Qt; pywal uses 0
+    QColor hslColour = QColor::fromHslF(hue, amount, colour.lightnessF());
 
     return hslColour.name(QColor::HexRgb);
 }
@@ -522,35 +515,23 @@ QString Color::c_saturate(float amount, QString color) {
  * Generic color adjustment for themers.
  */
 std::vector<std::string> Color::genericAdjust(std::vector<std::string> colors, bool light) {
+    // Mirror pywal/pywal/colors.py::generic_adjust. In the light branch pywal
+    // has a for-loop that reassigns a local variable and never mutates the
+    // list; intentionally omitted here so walpp matches pywal's output.
     if (light) {
-        std::vector<std::string> tempColors;
-        // Saturate & darken each color by a factor 0.60 & 0.50 respectively
-        foreach (auto &color, colors) {
-            std::string tempColor;
-            Color c(color);
-            tempColor = c.saturate(0.60, c.walColor.name(QColor::HexRgb)).toStdString();
-            tempColor = stdDarken(0.50, c.walColor.name(QColor::HexRgb).toStdString());
-            tempColors.push_back(tempColor);
-        }
-
-        colors = tempColors;
-        Color c0(tempColors.at(0));
-        std::string c1Hex = c0.walColor.name(QColor::HexRgb).toStdString();
-        auto lColor = lightenColor(0.95, tempColors.at(0));
+        std::string lColor = lightenColor(0.95f, colors.at(0));
         colors.at(0) = lColor;
-        colors.at(7) = stdDarken(0.75, lColor);
-        colors.at(8) = stdDarken(0.25, lColor);
+        colors.at(7) = stdDarken(0.75f, lColor);
+        colors.at(8) = stdDarken(0.25f, lColor);
         colors.at(15) = colors.at(7);
     } else {
-        std::string firstColor = colors.at(0);
-        Color c0(firstColor);
-        std::string color0Hex = c0.walColor.name(QColor::HexRgb).toStdString();
-        std::string darkerColor0 = stdDarken(0.80, color0Hex);
+        std::string darkerColor0 = stdDarken(0.80f, colors.at(0));
         colors.at(0) = darkerColor0;
-        colors.at(7) = lightenColor(0.75, darkerColor0);
-        colors.at(8) = lightenColor(0.25, darkerColor0);
+        colors.at(7) = lightenColor(0.75f, darkerColor0);
+        colors.at(8) = lightenColor(0.25f, darkerColor0);
         colors.at(15) = colors.at(7);
     }
 
     return colors;
 }
+

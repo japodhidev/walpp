@@ -1,91 +1,85 @@
 #include "../include/HaishokuImage.h"
+#include <algorithm>
+#include <cstdint>
+#include <unordered_map>
 
-HaishokuImage::HaishokuImage()  = default;
-
-Magick::Blob HaishokuImage::downloadImage(const std::string &url) {
-    CURL *curl = curl_easy_init();
-    std::vector<char> buffer;
-
-    if (!curl) {
-        std::string message = "CURL init failed!";
-        throw AppException(message);
-    }
-
-    CURLcode res;
-    curl_easy_setopt(curl, CURLOPT_URL, url.c_str());
-    curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, writeCallback);
-    curl_easy_setopt(curl, CURLOPT_WRITEDATA, &buffer);
-    curl_easy_setopt(curl, CURLOPT_FOLLOWLOCATION, 1L);
-
-    res = curl_easy_perform(curl);
-    curl_easy_cleanup(curl);
-
-    if (res != CURLE_OK) {
-        std::string message = "CURL download failed!";
-        throw AppException(message);
-    }
-
-    return Magick::Blob(buffer.data(), buffer.size());
-}
-
-/**
- * Extract all colors from an image.
- * @param imagePath
- * @return
- */
-std::vector<ColorTuple> HaishokuImage::getColors(std::string &imagePath) {
-    auto colors = Util::extractMaxColoursPillow(imagePath);
-    return colors;
-}
+HaishokuImage::HaishokuImage() = default;
 
 Magick::Image HaishokuImage::getImage(const std::string &imagePath) {
     Magick::Image image;
-    if (imagePath.rfind("http://", 0) == 0 || imagePath.rfind("https://", 0) == 0) {
-        Magick::Blob imgBlob = downloadImage(imagePath);
-        image.read(imgBlob);
-    } else {
-        image.read(imagePath);
-    }
-
-    if (image.colorSpace() != MagickCore::RGBColorspace) {
-        image.colorSpace(MagickCore::RGBColorspace);
-    }
-
+    image.read(imagePath);
+    // Flatten any alpha channel onto white before quantizing, matching PIL's
+    // Image.convert("RGB") behaviour which drops alpha via compositing.
+    image.backgroundColor(Magick::Color("white"));
+    image.alpha(false);
+    // Strip embedded ICC/colour profiles and force sRGB + 8-bit quantum so
+    // channel values survive as plain 0..255 on Q16HDRI builds.
+    image.strip();
+    image.colorSpace(MagickCore::sRGBColorspace);
+    image.depth(8);
+    image.type(Magick::TrueColorType);
     return image;
 }
 
+/**
+ * Scale-down the image so the longer side is at most 256 px, preserving
+ * aspect ratio. Matches PIL's Image.thumbnail((256, 256)) used by haishoku.
+ */
 Magick::Image HaishokuImage::getThumbnail(Magick::Image image) {
-    image.sample("256x256");
+    image.thumbnail(Magick::Geometry("256x256"));
     return image;
 }
 
-[[maybe_unused]] void HaishokuImage::jointImage(const std::vector<Magick::Image> &images) {
-    Magick::Geometry blockSize = images.front().size();
-    size_t totalWidth = blockSize.width() * images.size();
-    size_t height = blockSize.height();
+/**
+ * Extract all colors from an image as (count, [r, g, b]) tuples using
+ * Magick++'s color histogram. Matches PIL's Image.getcolors(w * h) used by
+ * haishoku.haillow.get_colors.
+ */
+std::vector<ColorTuple> HaishokuImage::getColors(std::string &imagePath) {
+    HaishokuImage self;
+    Magick::Image image = self.getImage(imagePath);
+    image = self.getThumbnail(image);
 
-    Magick::Image palette(Magick::Geometry(totalWidth, height), "white");
-    palette.type(MagickCore::TrueColorType);
+    const size_t width  = image.columns();
+    const size_t height = image.rows();
+    Magick::Pixels view(image);
+    const Magick::Quantum *pixels = view.getConst(0, 0, width, height);
+    const size_t channels = image.channels();
+    const double qRange = static_cast<double>((Magick::Quantum) 65535.0);
 
-    size_t offset = 0;
-    for (const auto &img : images) {
-        palette.composite(img, Magick::Geometry(offset, 0), Magick::OverCompositeOp);
-        offset += blockSize.width();
+    // Pack (r << 16 | g << 8 | b) into 24-bit key. Clamp to [0, 255] so HDRI
+    // quantum overshoot from resampling is treated the same as PIL would.
+    std::unordered_map<uint32_t, size_t> counts;
+    counts.reserve(width * height);
+
+    auto toByte = [&qRange](double q) -> int {
+        double v = q / qRange * 255.0;
+        return std::clamp(static_cast<int>(v), 0, 255);
+    };
+
+    for (size_t i = 0; i < width * height; ++i) {
+        const Magick::Quantum *p = pixels + i * channels;
+        int r = toByte(static_cast<double>(p[0]));
+        int g = toByte(static_cast<double>(p[1]));
+        int b = toByte(static_cast<double>(p[2]));
+        uint32_t key = (uint32_t(r) << 16) | (uint32_t(g) << 8) | uint32_t(b);
+        ++counts[key];
     }
-    // TODO: display palette to terminal, definitely!
-    // palette.display();
-}
 
-Magick::Image HaishokuImage::newImage(const Magick::Geometry &size, const Magick::Color &color) {
-    Magick::Image img;
-    img.size(size);
-    img.backgroundColor(color);
+    std::vector<ColorTuple> result;
+    result.reserve(counts.size());
+    for (const auto &entry : counts) {
+        int r = (entry.first >> 16) & 0xff;
+        int g = (entry.first >>  8) & 0xff;
+        int b =  entry.first        & 0xff;
+        result.emplace_back(static_cast<int>(entry.second),
+                            std::array<int, 3>{r, g, b});
+    }
 
-    return img;
-}
+    if (result.empty()) {
+        std::string message = "Empty set of colours extracted from image!";
+        throw AppException(message);
+    }
 
-size_t HaishokuImage::writeCallback(void *contents, size_t size, size_t nmemb, void *userp) {
-    ((std::vector<char>*)userp)->insert(((std::vector<char>*)userp)->end(), (char*) contents, (char*) contents + size + nmemb);
-
-    return size + nmemb;
+    return result;
 }

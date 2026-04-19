@@ -397,49 +397,6 @@ QJsonObject Util::colorsToMap(const QList<QString>& colors, QString &img) {
 }
 
 /**
- * Generic color adjustment for themers.
- */
-QList<QString> Util::genericAdjust(QList<QString> colors, bool light) {
-    QString firstColor = colors.at(0);
-    Color c0(firstColor);
-    if (light) {
-        foreach (QString color, colors) {
-            Color c(color);
-            color = c.saturate(0.6);
-            color = c.darken(0.5);
-        }
-
-        colors.replace(0, c0.darken(0.95));
-        colors.replace(7, c0.darken(0.75));
-        colors.replace(8, c0.darken(0.25));
-        colors.replace(15, colors.at(7));
-    } else {
-        colors.replace(0, c0.darken(0.80));
-        colors.replace(7, c0.darken(0.75));
-        colors.replace(8, c0.darken(0.25));
-        colors.replace(15, colors.at(7));
-    }
-
-    return colors;
-}
-
-/**
- * Saturate colors
- * @brief Util::saturateColors
- * @param colors
- * @param amount
- * @return
- */
-QList<QString> Util::saturateColors(QList<QString> colors, int amount) {
-    QList<QString> newColors;
-    if (amount & ((float) amount <= 1.0)) {
-        newColors = Color::saturateMultiple(colors, (float) amount);
-    }
-
-    return newColors;
-}
-
-/**
  * Create the cache file name
  * @brief Util::cacheFileName
  * @param img
@@ -550,7 +507,7 @@ QJsonObject Util::getColors(QString img, bool light, QString backend, QString ca
         }
         auto satF = sat.toFloat(&ok);
 
-        if (!sat.isEmpty() & (satF <= 1.0)) {
+        if (!sat.isEmpty() && satF <= 1.0f) {
             QList<int> skipIdx;
             skipIdx.append(0);
             skipIdx.append(7);
@@ -641,51 +598,6 @@ std::vector<std::string> Util::extractMaxColours(std::string &img, std::string m
         qDebug() << "There was an error parsing the output from Imagemagick!";
     }
 
-    return result;
-}
-
-/**
- * Extract as much colors as possible from an image using Pillow
- * @param img
- * @return
- */
-std::vector<ColorTuple> Util::extractMaxColoursPillow(std::string &img) {
-    std::vector<ColorTuple> result;
-    std::string message = "Intentionally quit!";
-    QString imgPath = QString::fromStdString(img);
-    QString cmd = "/home/sleek/.local/bin/extract_colors";
-    // FIXME: Running a Python script doesn't seem to provide the output from stdout.
-    // Write to & then read from /tmp/colors.txt
-     // QByteArray output = Util::checkOutput(cmd, QStringList() << imgPath);
-    Util::run(cmd, QStringList() << imgPath);
-    QString colorFile = "/tmp/colors.txt";
-    auto output = Util::readFile(colorFile);
-
-    if (output.size() > 0) {
-        // Structure: [[int, [int, int, int]]]
-        QString outputStr(output);
-        // Extract colors from an array of the structure: [count, [red, green, blue]]
-        QRegularExpression re(R"(\[(?P<count>\d+)\,\s\[(?P<red>\d+)\,\s(?P<green>\d+)\,\s(?P<blue>\d+))");
-        // QRegularExpressionMatchIterator i = re.globalMatch(outputStr);
-        auto i = re.globalMatch(outputStr);
-
-        while (i.hasNext()) {
-            QRegularExpressionMatch match = i.next();
-            bool ok;
-            int count = match.captured("count").toInt(&ok);
-            int red = match.captured("red").toInt(&ok);
-            int green = match.captured("green").toInt(&ok);
-            int blue = match.captured("blue").toInt(&ok);
-            std::array<int, 3> rgbArray = {red, green, blue};
-            
-            auto tempTuple = std::make_tuple(count, rgbArray);
-            result.push_back(tempTuple);
-        }
-    } else {
-        message = "Empty set of colours extracted from image!";
-        throw AppException(message);
-    }
-    
     return result;
 }
 

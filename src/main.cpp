@@ -243,7 +243,7 @@ void parseArgs(QCommandLineParser &parser) {
     bool it = parser.isSet("iterative");
     bool recurse = parser.isSet("recursive");
     bool l = parser.isSet("l");
-    QString saturation = parser.isSet("saturate") ? parser.value("saturate") : "0";
+    QString saturation = parser.isSet("saturate") ? parser.value("saturate") : QString();
 
     if (parser.isSet("directory")) {
         auto img = parser.value("directory");

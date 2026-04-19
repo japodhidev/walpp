@@ -48,8 +48,6 @@ public:
     static QList<QString> listBackends();
     static QString normalizeImgPath(QString &img);
     static QJsonObject colorsToMap(const QList<QString>& colors, QString &img);
-    static QList<QString> genericAdjust(QList<QString> colors, bool light);
-    static QList<QString> saturateColors(QList<QString> colors, int amount);
     static QList<QString> cacheFileName(QString &img, QString &backend, bool light, QString &cacheDir, QString sat = "");
     static QString getBackend(QString &backend);
     static void palette();
@@ -59,7 +57,6 @@ public:
     static std::vector<std::string> strQListToVector(QList<QString> &items);
     static QByteArray runImageMagick(int colorCount, QString &img, QString &magickCmd);
     static std::vector<std::string> extractMaxColours(std::string &img, std::string magickCmd);
-    static std::vector<ColorTuple> extractMaxColoursPillow(std::string &img);
     static QString hasIM();
 };
 

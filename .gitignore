@@ -87,3 +87,7 @@ cmake-build-debug/
 .vscode
 
 ./build.sh
+
+# Reference implementations, not part of the build
+pywal/
+haishoku-master/

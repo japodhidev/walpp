@@ -42,15 +42,12 @@ GroupedColors HaishokuAlgo::groupByAccuracy(const std::vector<ColorTuple> &color
         int g = std::get<1>(color)[1];
         int b = std::get<1>(color)[2];
 
-        // int r_idx = (r < info.r_min + info.r_value) ? 0 : (r < info.r_min + 2 * info.r_value) ? 1 : 2;
-        int r_idx = 2;
-        if (r < (info.r_min + info.r_value)) {
-            r_idx = 0;
-        } else if (r < (info.r_min + info.r_value * 2)) {
-            r_idx = 1;
-        }
-        int g_idx = (g < info.g_min + info.g_value) ? 0 : (r < info.g_min + info.g_value * 2) ? 1 : 2;
-        int b_idx = (b < info.b_min + info.b_value) ? 0 : (r < info.b_min + info.b_value * 2) ? 1 : 2;
+        int r_idx = (r < info.r_min + info.r_value) ? 0
+                  : (r < info.r_min + info.r_value * 2) ? 1 : 2;
+        int g_idx = (g < info.g_min + info.g_value) ? 0
+                  : (g < info.g_min + info.g_value * 2) ? 1 : 2;
+        int b_idx = (b < info.b_min + info.b_value) ? 0
+                  : (b < info.b_min + info.b_value * 2) ? 1 : 2;
         rgbGroups[r_idx][g_idx][b_idx].push_back(color);
     }
 
@@ -77,15 +74,15 @@ RGBMaxInfo HaishokuAlgo::rgbMaximum(const std::vector<ColorTuple> &colors) {
         return std::get<1>(a)[2] < std::get<1>(b)[2];
     });
 
-    // Pick the minimum value for each color
+    // Pick the minimum value for each color channel
     int r_min = std::get<1>(r_sorted.front())[0];
-    int g_min = std::get<1>(g_sorted.front())[0];
-    int b_min = std::get<1>(b_sorted.front())[0];
+    int g_min = std::get<1>(g_sorted.front())[1];
+    int b_min = std::get<1>(b_sorted.front())[2];
 
-    // Pick the maximum value for each color
+    // Pick the maximum value for each color channel
     int r_max = std::get<1>(r_sorted.back())[0];
-    int g_max = std::get<1>(g_sorted.back())[0];
-    int b_max = std::get<1>(b_sorted.back())[0];
+    int g_max = std::get<1>(g_sorted.back())[1];
+    int b_max = std::get<1>(b_sorted.back())[2];
 
     return {
         r_min, r_max,

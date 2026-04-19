@@ -5,10 +5,10 @@ set(CMAKE_CXX_STANDARD 20)
 set (CMAKE_CXX_STANDARD_REQUIRED True)
 
 find_package(Qt6 6.5 REQUIRED COMPONENTS Core Gui)
-find_package(ImageMagick REQUIRED COMPONENTS Magick++)
-include_directories("/usr/include/ImageMagick-7/")
-add_definitions( -DMAGICKCORE_QUANTUM_DEPTH=16 )
-add_definitions( -DMAGICKCORE_HDRI_ENABLE=0 )
+find_package(ImageMagick REQUIRED COMPONENTS Magick++ MagickCore)
+find_package(PkgConfig REQUIRED)
+pkg_check_modules(MAGICKPP REQUIRED Magick++)
+include_directories(${MAGICKPP_INCLUDE_DIRS})
 
 qt_standard_project_setup()
 
@@ -32,12 +32,13 @@ qt_add_executable(walpp
         include/HaishokuImage.h src/HaishokuImage.cpp
         include/haishoku.h src/haishoku.cpp)
 
+target_compile_options(walpp PRIVATE ${MAGICKPP_CFLAGS})
+
 target_link_libraries(walpp
     PRIVATE
         Qt::Core
         Qt::Gui
-        ${ImageMagick_LIBRARIES}
-        curl
+        ${MAGICKPP_LIBRARIES}
 )
 
 include(GNUInstallDirs)
