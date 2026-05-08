@@ -23,7 +23,7 @@ by the fact that support for additional backends has to be built from the ground
 
 Focused correctness pass on the `haishoku` and `wal` backends to bring output in line with pywal:
 
-- **Haishoku backend is now end-to-end native.** Replaced the external Python helper (`/home/sleek/.local/bin/extract_colors` + `/tmp/colors.txt`) with direct pixel iteration through `Magick::Pixels`, clamping HDRI overshoot to 0–255 and flattening alpha/profile before counting. CURL dependency and remote-URL support removed.
+- **Haishoku backend is now end-to-end native.** Replaced the external Python helper (`extract_colors` + `/tmp/colors.txt`) with direct pixel iteration through `Magick::Pixels`, clamping HDRI overshoot to 0–255 and flattening alpha/profile before counting. CURL dependency and remote-URL support removed.
 - **Haishoku algorithm bugs fixed.** `HaishokuAlgo::groupByAccuracy` was bucketing green/blue against the red threshold; `rgbMaximum` was reading the red index for every channel. `Haishoku::getColorsMean` now sorts by pixel count (not RGB) and keeps the top-8 most frequent groups (not the bottom 8). `Haishoku::get` rewritten to mirror `pywal/pywal/backends/haishoku.py`, with safe padding for low-variance images.
 - **Color primitives match pywal.** `Color::lighten` / `Color::darken` now use pywal's per-channel formulas instead of Qt's HSV-based `QColor::lighter()`/`darker()`. `Color::c_saturate` rewritten against HSL (`hslHueF` + `fromHslF`) to match `util.saturate_color`. `Color::genericAdjust` light branch reshaped so it has the same observable behaviour as pywal's dead-loop.
 - **Wal backend correctness follows from the primitive fix** — no changes to `Wal::adjust`, but its output now lines up with pywal because `lighten`/`darken` are correct.
