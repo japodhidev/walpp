@@ -26,9 +26,6 @@ by the fact that support for additional backends has to be built from the ground
 - [Ninja](https://ninja-build.org/) build system
 - A C++ compiler (GCC, Clang, etc.)
 
-<<<<<<< HEAD
->>>>>>> 7b6cd78f6938da18692e765ede1b6a5912af2289
-
 **1. Configure the project**
 
 ```bash
