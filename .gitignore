@@ -91,3 +91,6 @@ cmake-build-debug/
 # Reference implementations, not part of the build
 pywal/
 haishoku-master/
+
+# Claude
+CLAUDE.MD
