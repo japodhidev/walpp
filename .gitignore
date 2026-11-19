@@ -84,6 +84,7 @@ CMakeLists.txt.user*
 # Jetbrains
 .idea/
 cmake-build-debug/
+cmake-build-release/
 .vscode
 
 ./build.sh
