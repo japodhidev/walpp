@@ -16,6 +16,7 @@
 #include <QStandardPaths>
 #include <QFileInfo>
 #include <QRandomGenerator>
+#include <QDirIterator>
 #include "appexception.h"
 #include "backend.h"
 #include "color.h"
@@ -40,7 +41,7 @@ public:
     static void saveJSONFile(QJsonObject &data, QString &exportFile);
     static void createDir(QString &directory);
     static void removeDirFiles(const QString& directory);
-    static QString joinPath(QString oPath, QStringList addition);
+    static QString joinPath(const QString& oPath, const QStringList& addition);
     static QString which(const QString& program);
     static void run(const QString& command, QStringList &args);
     static void pOpen(const QString& command, const QStringList& args);
@@ -58,6 +59,7 @@ public:
     static QByteArray runImageMagick(int colorCount, QString &img, QString &magickCmd);
     static std::vector<std::string> extractMaxColours(std::string &img, std::string magickCmd);
     static QString hasIM();
+    static void copyTemplateFiles(QString &templateDirectory);
 };
 
 #endif // UTIL_H

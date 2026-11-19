@@ -30,15 +30,10 @@ void Theme::save(QJsonObject &colors, QString &name, bool light) {
 QJsonObject Theme::import(QString &inputFile, bool light) {
     QString lightDir = Util::joinPath(Setting::CONF_DIR, QStringList() << "colorschemes" << "light");
     QString darkDir = Util::joinPath(Setting::CONF_DIR, QStringList() << "colorschemes" << "dark");
-    QString darkDirModules = Util::joinPath(Setting::MODULE_DIR, QStringList() << "colorschemes" << "dark");
-    QString lightDirModules = Util::joinPath(Setting::MODULE_DIR, QStringList() << "colorschemes" << "light");
+    QString themeFile;
+
     Util::createDir(lightDir);
     Util::createDir(darkDir);
-    // Create module theme directories
-    Util::createDir(darkDirModules);
-    Util::createDir(lightDirModules);
-
-    QString themeFile;
 
     // Find theme file
     if (inputFile == "random" | inputFile == "random_dark") {
@@ -51,7 +46,6 @@ QJsonObject Theme::import(QString &inputFile, bool light) {
         QString mode = light ? "light" : "dark";
         QString themeName = inputFile.endsWith(".json") ? inputFile : inputFile.append(".json");
         QString userThemeFile = Util::joinPath(Setting::CONF_DIR, QStringList() << "colorschemes" << mode << themeName);
-        themeFile = Util::joinPath(Setting::MODULE_DIR, QStringList() << "colorschemes" << mode << themeName);
 
         QFileInfo ut_info(userThemeFile);
         QFileInfo i_info(inputFile);
@@ -145,7 +139,7 @@ QList<QString> Theme::listUserThemes() {
  * @return
  */
 QList<QString> Theme::listThemes(bool mode) {
-    QString themeDir  = Util::joinPath(Setting::MODULE_DIR, QStringList() << "colorschemes");
+    QString themeDir  = Util::joinPath(Setting::CONF_DIR, QStringList() << "colorschemes");
 
     return listUtil(themeDir, mode);
 }

@@ -6,9 +6,9 @@
 
 class Logging {
 public:
-    static void info(QString message);
-    static void error(QString message);
-    static void exception(QString message);
+    static void info(const QString &message);
+    static void error(const QString &message);
+    static void exception(const QString &message);
 };
 
 #endif //WALPP_LOGGING_H

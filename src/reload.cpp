@@ -41,7 +41,7 @@ void Reload::xrdb() {
 void Reload::gtk() {
     QString python2 = "python2";
     if (!Util::which(python2).isEmpty()) {
-        QString gtkReload = Util::joinPath(Setting::MODULE_DIR, QStringList() << "scripts" << "gtk_reload.py");
+        QString gtkReload = Util::joinPath(Setting::CONF_DIR, QStringList() << "scripts" << "gtk_reload.py");
         QString cmd = "python2";
         Util::disown(cmd, QStringList() << gtkReload);
     }

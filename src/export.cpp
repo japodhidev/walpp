@@ -10,7 +10,7 @@ Export::Export() = default;
  */
 void Export::exportAll(QJsonObject &colors, const QString& outputDir) {
 	QMap<QString, QString> mColors = flattenColors(colors);
-	QString templateDir = Util::joinPath(Setting::MODULE_DIR, QStringList() << "templates");
+	QString templateDir = Util::joinPath(Setting::TEMPLATE_DIR, QStringList() << "");
 	QString templateDirUser = Util::joinPath(Setting::CONF_DIR, QStringList() << "templates");
 	Util::createDir(templateDirUser);
 
@@ -52,7 +52,7 @@ void Export::exportAll(QJsonObject &colors, const QString& outputDir) {
 void Export::exportSingle(QJsonObject &colors, QString &exportType, const QString& outputFile) {
 	QMap<QString, QString> mColors = flattenColors(colors);
 	QString templateName = getExportType(exportType);
-	QString templateFile = Util::joinPath(Setting::MODULE_DIR, QStringList() << "templates" << templateName);
+	QString templateFile = Util::joinPath(Setting::CONF_DIR, QStringList() << "templates" << templateName);
 	QString oFile = !outputFile.isEmpty() ? outputFile : Util::joinPath(Setting::CACHE_DIR, QStringList() << templateName);
 
 	QFileInfo tFile(templateFile);

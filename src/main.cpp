@@ -31,6 +31,8 @@ int main(int argc, char *argv[]) {
     Util::createDir(lightDir);
     Util::createDir(darkDir);
 
+    // TODO: Conditionally copy the contents of the template directory into Setting::XDG_CONFIG_DIR/templates directory
+
     // Process args
     QCommandLineParser parser;
     parser.setApplicationDescription("walpp - Generate colorschemes on the fly");
@@ -130,6 +132,13 @@ int main(int argc, char *argv[]) {
         QCoreApplication::translate("main", "saveTheme")
         );
     parser.addOption(saveTheme);
+
+    QCommandLineOption copyTemplates(
+            QStringList() << "ct" << "copyTemplates",
+            QCoreApplication::translate("main", "Copy export templates to the user directory"),
+            QCoreApplication::translate("main", "copyTemplates")
+    );
+    parser.addOption(copyTemplates);
 
     QCommandLineOption quietMode(
         "q",
@@ -316,6 +325,11 @@ void parseArgs(QCommandLineParser &parser) {
     if (!parser.isSet("e")) {
         // TODO: reload::gtk();
         Reload::gtk();
+    }
+
+    if (parser.isSet("copyTemplates")) {
+        QString templateDir = parser.value("copyTemplates");
+        Util::copyTemplateFiles(templateDir);
     }
     // Gracefully exit.
     std::exit(EXIT_SUCCESS);

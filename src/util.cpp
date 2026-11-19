@@ -261,7 +261,7 @@ void Util::saveFileLines(QList<QString> &data, QString &exportFile, bool mkDir) 
  * @param addition
  * @return
  */
- QString Util::joinPath(QString oPath, QStringList addition) {
+ QString Util::joinPath(const QString& oPath, const QStringList& addition) {
     std::filesystem::path o_p = oPath.toStdString();
     // o_p /= addition.toStdString();
     foreach (const QString entry, addition) {
@@ -388,7 +388,7 @@ QJsonObject Util::colorsToMap(const QList<QString>& colors, QString &img) {
     Color cl;
     QJsonObject result {
         {"wallpaper", QJsonValue(imgPath)},
-        {"alpha", cl.alphaValue},
+        {"alpha", Color::alphaValue},
         {"special", special},
         {"colors", c}
     };
@@ -487,7 +487,7 @@ QJsonObject Util::getColors(QString img, bool light, QString backend, QString ca
         Color color;
         QString cFilePath = cFile.absoluteFilePath();
         cs = Theme::import(cFilePath);
-        auto alpha = QJsonValue(color.alphaValue);
+        auto alpha = QJsonValue(Color::alphaValue);
         cs.insert("alpha",  alpha);
     } else {
         Logging::info(QString("\033[1;31m%1\033[0m: %2").arg("colors", "Generating a colorscheme."));
@@ -538,7 +538,7 @@ int Util::getRandomInt(int min, int max) {
 
 QList<QString> Util::strVectorToQList(std::vector<std::string> &items) {
     QList<QString> result;
-    for (std::string &i : items) {
+    for (auto &i : items) {
         QString i_str = QString::fromStdString(i);
         result.append(i_str);
     }
@@ -549,7 +549,8 @@ QList<QString> Util::strVectorToQList(std::vector<std::string> &items) {
 std::vector<std::string> Util::strQListToVector(QList<QString> &items) {
     std::vector<std::string> result;
     for (const auto &item : items) {
-        result.push_back(item.toStdString());
+        std::string res = item.toStdString();
+        result.push_back(res);
     }
 
     return result;
@@ -589,8 +590,8 @@ std::vector<std::string> Util::extractMaxColours(std::string &img, std::string m
                 // QRegularExpressionMatch match = re.match(item);
                 auto match = re.match(item);
                 if (match.hasMatch()) {
-                    auto hexColor = match.captured(0);
-                    result.push_back(hexColor.toStdString());
+                    auto hexColor = match.captured(0).toStdString();
+                    result.push_back(hexColor);
                 }
             }
         }
@@ -614,4 +615,31 @@ QString Util::hasIM() {
 
     std::string message = "Imagemagick wasn't found on your system. Try another backend. (wal --backend)";
     throw AppException(message);
+}
+
+void Util::copyTemplateFiles(QString &templateDirectory) {
+    // TODO: Check if the template sample directory exists and is not empty
+    QDir tSampleDir(templateDirectory);
+    if (tSampleDir.exists() && !tSampleDir.isEmpty()) {
+        // TODO: Check if the user's template directory exists, create it if it doesn't
+        QDir tDir(Setting::TEMPLATE_DIR);
+        if (!tDir.exists()) {
+            createDir(const_cast<QString &>(Setting::TEMPLATE_DIR));
+        } else {
+            Logging::info(QString("%1 already exists").arg(Setting::TEMPLATE_DIR));
+        }
+        // TODO: Copy (overwrite) templates into the user's template directory
+        QDirIterator tDirIter(tSampleDir);
+        while (tDirIter.hasNext()) {
+            // TODO: Ensure only files are copied, not directories
+            if (tDirIter.fileInfo().isFile()) {
+                QFile::copy(tDirIter.fileInfo().absoluteFilePath(), Setting::TEMPLATE_DIR);
+            } else {
+                Logging::info(QString("%1 is a directory, skipping...").arg(tDirIter.fileName()));
+            }
+        }
+    } else {
+        std::string message = QString("%1 is either an invalid or empty directory!").arg(tSampleDir.absolutePath()).toStdString();
+        throw AppException(message);
+    }
 }
