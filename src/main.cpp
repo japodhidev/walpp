@@ -33,7 +33,7 @@ int main(int argc, char *argv[]) {
 
     // Process args
     QCommandLineParser parser;
-    parser.setApplicationDescription("wal - Generate colorschemes on the fly");
+    parser.setApplicationDescription("walpp - Generate colorschemes on the fly");
 
     QCommandLineOption alpha(
         QStringList() << "a" << "alpha",
@@ -50,16 +50,14 @@ int main(int argc, char *argv[]) {
     parser.addOption(background);
 
     QCommandLineOption backend(
-        QStringList() << "backend" << "backend",
-        QCoreApplication::translate("main", "Which color backend to use. Use 'walpp --backend' to list backends."),
-        QCoreApplication::translate("main", "backend")
+        QStringList() << "backend",
+        QCoreApplication::translate("main", "Which color backend to use. Use 'walpp --backend' to list backends.")
         );
     parser.addOption(backend);
 
     QCommandLineOption theme(
         QStringList() << "theme" << "theme",
-        QCoreApplication::translate("main", "Which colorscheme file to use. Use 'walpp --theme' to list builtin and user themes."),
-        QCoreApplication::translate("main", "theme")
+        QCoreApplication::translate("main", "Which colorscheme file to use. Use 'walpp --theme' to list builtin and user themes.")
         );
     parser.addOption(theme);
 
@@ -128,7 +126,7 @@ int main(int argc, char *argv[]) {
 
     QCommandLineOption saveTheme(
         QStringList() << "p" << "saveTheme",
-        QCoreApplication::translate("main", "Permanently save theme to $XDG_CONFIG_HOME/wal/colorschemes with the specified name."),
+        QCoreApplication::translate("main", "Permanently save theme to $XDG_CONFIG_HOME/walpp/colorschemes with the specified name."),
         QCoreApplication::translate("main", "saveTheme")
         );
     parser.addOption(saveTheme);
@@ -168,6 +166,12 @@ int main(int argc, char *argv[]) {
         QCoreApplication::translate("main", "Skip reloading gtk/xrdb/i3/sway/polybar")
         );
     parser.addOption(skipMost);
+
+    QCommandLineOption showHelp(
+            QStringList() << "h" << "help",
+            QCoreApplication::translate("main", "Show help menu")
+    );
+    parser.addOption(showHelp);
     // Parse provided arguments
     parser.process(coreApplication);
     // Process exiting args
@@ -180,7 +184,7 @@ int main(int argc, char *argv[]) {
 
 void parseExitingArgs(QCommandLineParser &parser) {
     // Process args that exit
-    if (parser.optionNames().empty()) {
+    if (parser.optionNames().empty() || parser.isSet("h") || parser.isSet("help")) {
         parser.showHelp();
     }
 
@@ -210,16 +214,17 @@ void parseExitingArgs(QCommandLineParser &parser) {
         std::exit(EXIT_FAILURE);
     }
 
-    if (parser.value("theme") == "list_themes") {
+    if (parser.isSet("theme")) {
         Theme::listAllThemes();
         std::exit(EXIT_SUCCESS);
     }
 
-    if (parser.value("backend") == "list_backends") {
+    if ( parser.isSet("backend")) {
         QTextStream ts(stdout);
         foreach (const auto &b, Util::listBackends()) {
             ts << "\n - " << "\033[1;32mBackends\033[0m:" << b;
         }
+        ts >> Qt::endl;
         std::exit(EXIT_SUCCESS);
     }
 }
@@ -235,7 +240,7 @@ void parseArgs(QCommandLineParser &parser) {
 
     if (parser.isSet("alpha")) {
         bool ok;
-        color.alphaValue = parser.value("alpha").toDouble(&ok);
+        Color::alphaValue = parser.value("alpha").toDouble(&ok);
     }
 
     QString imageFile;
@@ -252,7 +257,7 @@ void parseArgs(QCommandLineParser &parser) {
         QString bEnd = parser.isSet("backend") ? parser.value("backend") : "wal";
         plainColors = Util::getColors(imageFile, l, bEnd, Setting::CACHE_DIR, saturation);
         // Insert alpha value provided
-        plainColors.insert("alpha", color.alphaValue);
+        plainColors.insert("alpha", Color::alphaValue);
     }
 
     if (parser.isSet("theme")) {
@@ -265,7 +270,7 @@ void parseArgs(QCommandLineParser &parser) {
         QString walStr = QString(cachedWallpaper.at(0));
         plainColors = Util::getColors(walStr, l, parser.value("backend"), saturation);
         // Insert alpha value provided
-        plainColors.insert("alpha", color.alphaValue);
+        plainColors.insert("alpha", Color::alphaValue);
     }
 
     if (parser.isSet("background")) {
