@@ -109,7 +109,7 @@ QJsonObject Theme::parse(QString &themeFile) {
 
     if (!jsonData.contains("alpha")) {
         Color color;
-        jsonData.insert("alpha", color.alphaValue);
+        jsonData.insert("alpha", Color::alphaValue);
     }
 
     // Terminal.sexy format

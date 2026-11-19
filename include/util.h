@@ -59,7 +59,7 @@ public:
     static QByteArray runImageMagick(int colorCount, QString &img, QString &magickCmd);
     static std::vector<std::string> extractMaxColours(std::string &img, std::string magickCmd);
     static QString hasIM();
-    static void copyTemplateFiles(QString &templateDirectory);
+    static void copyFiles(QString &source, const QString& destination, bool folders = false);
 };
 
 #endif // UTIL_H

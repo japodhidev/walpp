@@ -27,7 +27,6 @@ private:
     static QList<QString> listThemes(bool mode = true);
     static QJsonObject terminalSexyToWal(QJsonObject &data);
     static QList<QString> listUtil(QString &dirName, bool mode);
-
 };
 
 #endif //WALPP_THEME_H

@@ -58,7 +58,7 @@ int main(int argc, char *argv[]) {
     parser.addOption(backend);
 
     QCommandLineOption theme(
-        QStringList() << "theme" << "theme",
+        QStringList() << "theme",
         QCoreApplication::translate("main", "Which colorscheme file to use. Use 'walpp --theme' to list builtin and user themes.")
         );
     parser.addOption(theme);
@@ -76,7 +76,7 @@ int main(int argc, char *argv[]) {
     parser.addOption(recursive);
 
     QCommandLineOption saturate(
-        QStringList() << "saturate" << "saturate",
+        QStringList() << "saturate",
         QCoreApplication::translate("main", "Set the color saturation."),
         QCoreApplication::translate("main", "saturate")
         );
@@ -101,7 +101,7 @@ int main(int argc, char *argv[]) {
     parser.addOption(deleteCached);
 
     QCommandLineOption directory(
-        QStringList() << "i" << "directory",
+        QStringList() << "i",
         QCoreApplication::translate("main", "Which image or directory to use."),
         QCoreApplication::translate("main", "directory")
         );
@@ -134,11 +134,18 @@ int main(int argc, char *argv[]) {
     parser.addOption(saveTheme);
 
     QCommandLineOption copyTemplates(
-            QStringList() << "ct" << "copyTemplates",
+            QStringList() << "ct" << "copy-templates",
             QCoreApplication::translate("main", "Copy export templates to the user directory"),
             QCoreApplication::translate("main", "copyTemplates")
     );
     parser.addOption(copyTemplates);
+
+    QCommandLineOption copySchemes(
+            QStringList() << "cs" << "copy-schemes",
+            QCoreApplication::translate("main", "Copy pywal's default color schemes to the user directory"),
+            QCoreApplication::translate("main", "copySchemes")
+    );
+    parser.addOption(copySchemes);
 
     QCommandLineOption quietMode(
         "q",
@@ -178,7 +185,7 @@ int main(int argc, char *argv[]) {
 
     QCommandLineOption showHelp(
             QStringList() << "h" << "help",
-            QCoreApplication::translate("main", "Show help menu")
+            QCoreApplication::translate("main", "Show this help menu")
     );
     parser.addOption(showHelp);
     // Parse provided arguments
@@ -197,6 +204,18 @@ void parseExitingArgs(QCommandLineParser &parser) {
         parser.showHelp();
     }
 
+    if (parser.isSet("ct")) {
+        QString templateDir = parser.value("ct");
+        Util::copyFiles(templateDir, Setting::TEMPLATE_DIR);
+        std::exit(EXIT_SUCCESS);
+    }
+
+    if (parser.isSet("cs")) {
+        QString templateDir = parser.value("cs");
+        Util::copyFiles(templateDir, Setting::CONF_DIR, true);
+        std::exit(EXIT_SUCCESS);
+    }
+
     // qDebug() << "Test";
     // std::exit(EXIT_FAILURE);
 
@@ -206,7 +225,7 @@ void parseExitingArgs(QCommandLineParser &parser) {
         std::exit(EXIT_SUCCESS);
     }
 
-    if (parser.isSet("directory") & parser.isSet("theme")) {
+    if (parser.isSet("directory") and parser.isSet("theme")) {
         Logging::error(QString("Conflicting arguments -i and -f."));
         std::exit(EXIT_FAILURE);
     }
@@ -217,8 +236,8 @@ void parseExitingArgs(QCommandLineParser &parser) {
         std::exit(EXIT_SUCCESS);
     }
 
-    if (!parser.isSet("directory") & !parser.isSet("theme") & !parser.isSet("w") & !parser.isSet("backend")) {
-        QString msg("Error: No input specified. --backend, --theme, -i or -R are required.");
+    if (!parser.isSet("directory") && !parser.isSet("theme") && !parser.isSet("w") && !parser.isSet("backend") && !parser.isSet("ct") && !parser.isSet("cs") ) {
+        QString msg("Error: No input specified. --backend, --theme, -i, -R, --ct or --cs are required.");
         Logging::error(msg);
         std::exit(EXIT_FAILURE);
     }
@@ -327,10 +346,6 @@ void parseArgs(QCommandLineParser &parser) {
         Reload::gtk();
     }
 
-    if (parser.isSet("copyTemplates")) {
-        QString templateDir = parser.value("copyTemplates");
-        Util::copyTemplateFiles(templateDir);
-    }
     // Gracefully exit.
     std::exit(EXIT_SUCCESS);
 }

@@ -617,9 +617,15 @@ QString Util::hasIM() {
     throw AppException(message);
 }
 
-void Util::copyTemplateFiles(QString &templateDirectory) {
+/**
+ * Iteratively copy files from source to destination
+ * @param source Source directory
+ * @param destination Destination directory
+ */
+void Util::copyFiles(QString &source, const QString& destination, bool folders) {
     // TODO: Check if the template sample directory exists and is not empty
-    QDir tSampleDir(templateDirectory);
+    QDir tSampleDir(source);
+    const int absSourcePathLength = tSampleDir.absoluteFilePath(source).length();
     if (tSampleDir.exists() && !tSampleDir.isEmpty()) {
         // TODO: Check if the user's template directory exists, create it if it doesn't
         QDir tDir(Setting::TEMPLATE_DIR);
@@ -629,13 +635,31 @@ void Util::copyTemplateFiles(QString &templateDirectory) {
             Logging::info(QString("%1 already exists").arg(Setting::TEMPLATE_DIR));
         }
         // TODO: Copy (overwrite) templates into the user's template directory
-        QDirIterator tDirIter(tSampleDir);
+        QDirIterator tDirIter(tSampleDir, QDirIterator::Subdirectories);
         while (tDirIter.hasNext()) {
-            // TODO: Ensure only files are copied, not directories
-            if (tDirIter.fileInfo().isFile()) {
-                QFile::copy(tDirIter.fileInfo().absoluteFilePath(), Setting::TEMPLATE_DIR);
-            } else {
-                Logging::info(QString("%1 is a directory, skipping...").arg(tDirIter.fileName()));
+            tDirIter.next();
+            const QFileInfo fileInfo = tDirIter.fileInfo();
+            // Filter . & ..
+            if (!fileInfo.isHidden()) {
+                if (fileInfo.isDir()) {
+                    if (folders) {
+                        // Conditionally copy directories
+                        QDir dest(destination);
+                        QFile::copy(tDirIter.fileInfo().absoluteFilePath(), dest.absolutePath());
+                    } else {
+                        Logging::info(QString("%1 is a directory, skipping...").arg(tDirIter.fileName()));
+                    }
+                } else if (fileInfo.isFile()){
+                    QDir dest(destination);
+                    const QString subPathStructure = fileInfo.absoluteFilePath().mid(absSourcePathLength);
+                    auto absPath = fileInfo.absoluteFilePath();
+                    auto destPath = dest.absolutePath() + subPathStructure;
+                    QFile::remove(destPath);
+                    bool copyStatus = QFile::copy(fileInfo.absoluteFilePath(), destPath);
+                    if (!copyStatus) {
+                        Logging::error(QString("Failed copying %1 to %2").arg(absPath, destPath));
+                    }
+                }
             }
         }
     } else {
